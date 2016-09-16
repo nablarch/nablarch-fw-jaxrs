@@ -1,0 +1,33 @@
+<routes>
+  <root to="Person#index" />
+  <get path="/action/person/json" to="Person#findJson" />
+  <post path="/action/person/json" to="Person#saveJson" />
+  <get path="/action/person/xml" to="Person#findXml" />
+  <post path="/action/person/xml" to="Person#saveXml" />
+  <get path="/action/person/form" to="Person#findFormUrlencoded" />
+  <post path="/action/person/form" to="Person#saveFormUrlencoded" />
+  <get path="/action/simple" to="Simple#success" />
+  <get path="/action/appError" to="Error#app" />
+  <get path="/action/errorEmptyBody" to="Error#errorWithoutBody" />
+  <get path="/action/errorBody" to="Error#errorWithBody" />
+  <post path="/action/invalidJson" to="Error#invalidJson" />
+  <post path="/action/invalidXml" to="Error#invalidXml" />
+  <post path="/action/invalidForm" to="Error#invalidForm" />
+  <post path="/action/notMathMediaType" to="Error#notMatchMediaType" />
+  <post path="/action/person/saveXmlInvalidSignature" to="Person#saveXmlInvalidSignature" />
+  <get path="/action/exceptionWithMessage" to="Error#throwExceptionWithMessage" />
+
+  <get path="action/simple/httpResponseWithBody" to="Simple#httpResponseWithBody" />
+  <get path="action/simple/httpHeader" to="Simple#httpHeader" />
+
+  <!-- URIのパスパラメータ -->
+  <match path="action/simple/notContent" to="Simple#notContent" />
+  <match path="action/simple/empty/json" to="Simple#emptyJson" />
+  <match path="action/simple/empty/xml" to="Simple#emptyXml" />
+  <match path="action/simple/empty/form" to="Simple#emptyForm" />
+  <match path="action/simple/queryParam" controller="Simple" action="queryParam" />
+  <match path="action/simple/pathParam/:id" controller="Simple" action="pathParam" />
+  <match path="action/error/notexist" to="Error#notExist" />
+
+  <match path="action/:controller/:action" />
+</routes>

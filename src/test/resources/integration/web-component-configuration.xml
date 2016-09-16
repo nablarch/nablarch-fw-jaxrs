@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component-configuration
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://tis.co.jp/nablarch/component-configuration"
+    xsi:schemaLocation="http://tis.co.jp/nablarch/component-configuration  /component-configuration.xsd">
+
+  <import file="db.xml"/>
+  <import file="bean-validation.xml"/>
+
+  <!--パッケージマッピングの設定 -->
+  <component name="packageMapping" class="nablarch.integration.router.RoutesMapping">
+    <property name="routes" value="routes.xml"/>
+    <property name="baseUri" value="" />
+    <property name="checkInterval" value="0"/>
+    <property name="basePackage" value="nablarch.fw.jaxrs.integration.app" />
+    <property name="methodBinderFactory">
+      <component class="nablarch.fw.jaxrs.JaxRsMethodBinderFactory">
+        <property name="handlerList">
+          <component class="nablarch.integration.jaxrs.jersey.JerseyJaxRsHandlerListFactory"/>
+        </property>
+      </component>
+    </property>
+  </component>
+
+  <!-- ハンドラキュー構成 -->
+  <component name="webFrontController" class="nablarch.fw.web.servlet.WebFrontController">
+    <property name="handlerQueue">
+      <list>
+        <component class="nablarch.fw.handler.GlobalErrorHandler"/>
+        <component class="nablarch.fw.jaxrs.JaxRsResponseHandler"/>
+        <component name="dbConnectionHandler" class="nablarch.common.handler.DbConnectionManagementHandler">
+          <property name="connectionFactory" ref="connectionFactory"/>
+        </component>
+        <component name="transactionHandler" class="nablarch.common.handler.TransactionManagementHandler">
+          <property name="transactionFactory" ref="jdbcTransactionFactory" />
+        </component>
+        <component-ref name="packageMapping"/>
+      </list>
+    </property>
+  </component>
+
+  <!-- 初期化が必要なコンポーネント -->
+  <component name="initializer" class="nablarch.core.repository.initialization.BasicApplicationInitializer">
+    <property name="initializeList">
+      <list>
+        <component-ref name="statementValueObjectCache" />
+        <component-ref name="packageMapping" />
+      </list>
+    </property>
+  </component>
+</component-configuration>
