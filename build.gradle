@@ -73,9 +73,9 @@ dependencies {
   glassfish 'org.jboss.arquillian.container:arquillian-glassfish-embedded-3.1:1.0.0.CR4'
 
   jboss ('org.wildfly:wildfly-arquillian-container-managed:8.2.1.Final') {
-    exclude module: 'xnio-api'
-    exclude module: 'xnio-nio'
-    exclude module: 'arquillian-container-test-impl-base'
+    exclude group:'*', module: 'xnio-api'
+    exclude group:'*', module: 'xnio-nio'
+    exclude group:'*', module: 'arquillian-container-test-impl-base'
   }
   jboss 'org.jboss.resteasy:resteasy-client:3.0.13.Final'
   jboss 'org.jboss.resteasy:resteasy-jackson-provider:3.0.13.Final'
@@ -90,7 +90,7 @@ dependencies {
   integrationTest 'com.nablarch.framework:nablarch-common-jdbc:1.1.1'
 
   integrationTest('com.nablarch.integration:nablarch-jersey-adaptor:1.0.1') {
-    exclude module: 'nablarch-fw-jaxrs'
+    exclude group:'*', module: 'nablarch-fw-jaxrs'
   }
   integrationTest 'org.codehaus.jackson:jackson-mapper-asl:1.9.12'
 
