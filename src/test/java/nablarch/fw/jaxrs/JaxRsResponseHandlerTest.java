@@ -1,7 +1,7 @@
 package nablarch.fw.jaxrs;
 
 import static nablarch.fw.jaxrs.HttpResponseMatcher.isStatusCode;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
 import java.io.ByteArrayOutputStream;
@@ -38,7 +38,6 @@ import org.junit.Test;
 import mockit.Delegate;
 import mockit.Expectations;
 import mockit.Mocked;
-import mockit.NonStrictExpectations;
 import mockit.Verifications;
 
 /**
@@ -71,20 +70,25 @@ public class JaxRsResponseHandlerTest {
     @Before
     public void setUp() throws Exception {
         OnMemoryLogWriter.clear();
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockServletRequest.getContextPath();
             result = "dummy";
+            minTimes = 0;
             mockServletRequest.getRequestURI();
             result = "dummy/users";
+            minTimes = 0;
 
             ServletOutputStream stream = mockServletResponse.getOutputStream();
             result = mockOutputStream;
+            minTimes = 0;
+            
             stream.write(withAny(new byte[0]), anyInt, anyInt);
             result = new Delegate<Void>() {
                 public void delegate(byte[] b, int offset, int length) {
                     responseBody.write(b, offset, length);
                 }
             };
+            minTimes = 0;
         }};
         context = new ServletExecutionContext(mockServletRequest, mockServletResponse, mockServletContext);
     }
@@ -287,7 +291,7 @@ public class JaxRsResponseHandlerTest {
 
     /**
      * {@link ApplicationException}が発生した場合で、例外内容のログ出力に失敗するケース
-     *
+     * <p>
      * ApplicationExceptionに対応した400のステータスが戻されるが、
      * ログ出力の失敗を示すFATALログが出力されること。
      */
