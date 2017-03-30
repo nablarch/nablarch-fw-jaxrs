@@ -1,7 +1,17 @@
 package nablarch.fw.jaxrs;
 
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hamcrest.Description;
+import org.hamcrest.TypeSafeMatcher;
+
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.Handler;
 import nablarch.fw.HandlerWrapper;
@@ -9,20 +19,13 @@ import nablarch.fw.handler.MethodBinding;
 import nablarch.fw.web.HttpErrorResponse;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
-import org.hamcrest.Description;
-import org.hamcrest.TypeSafeMatcher;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import mockit.Expectations;
+import mockit.Mocked;
 
 /**
  * {@link JaxRsMethodBinder}のテストクラス。
@@ -154,7 +157,7 @@ public class JaxRsMethodBinderTest {
             }
         });
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             req.getRequestUri();
             result = "/test";
         }};

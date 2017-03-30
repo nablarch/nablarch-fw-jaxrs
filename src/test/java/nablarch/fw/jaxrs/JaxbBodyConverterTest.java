@@ -1,30 +1,38 @@
 package nablarch.fw.jaxrs;
 
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.PropertyException;
+import javax.xml.bind.UnmarshalException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.hamcrest.CoreMatchers;
+
 import nablarch.fw.web.HttpErrorResponse;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
 import nablarch.fw.web.servlet.NablarchHttpServletRequestWrapper;
 import nablarch.fw.web.servlet.ServletExecutionContext;
 import nablarch.test.support.log.app.OnMemoryLogWriter;
-import org.hamcrest.CoreMatchers;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import javax.xml.bind.*;
-import javax.xml.bind.annotation.XmlRootElement;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import mockit.Expectations;
+import mockit.Mocked;
 
 /**
  * {@link JaxbBodyConverter}のテストクラス。
@@ -74,13 +82,16 @@ public class JaxbBodyConverterTest {
                 + "  <name>山田太郎</name>"
                 + "</person>";
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             jaxRsContext.getRequestClass();
             result = Person.class;
+            minTimes = 0;
             jaxRsContext.getConsumesMediaType();
             result = "application/xml";
+            minTimes = 0;
             servletRequest.getReader();
             result = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(xml.getBytes("utf-8")), "utf-8"));
+            minTimes = 0;
         }};
 
         Person person = (Person) sut.read(request, executionContext);
@@ -99,15 +110,19 @@ public class JaxbBodyConverterTest {
 
         final String xml = "<?xml version=\"1.0\"?><person><age>34</age><name>山田花子</name></person>";
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             jaxRsContext.getRequestClass();
             result = Person.class;
+            minTimes = 0;
             jaxRsContext.getConsumesMediaType();
             result = "application/xml";
+            minTimes = 0;
             servletRequest.getCharacterEncoding();
             result = "windows-31j";
+            minTimes = 0;
             servletRequest.getReader();
             result = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(xml.getBytes("windows-31j")), "windows-31j"));
+            minTimes = 0;
         }};
 
         Person person = (Person) sut.read(request, executionContext);
@@ -123,7 +138,7 @@ public class JaxbBodyConverterTest {
      */
     @Test
     public void test_read_failed() throws Exception {
-        new NonStrictExpectations() {{
+        new Expectations() {{
             jaxRsContext.getRequestClass();
             result = Person.class;
             jaxRsContext.getConsumesMediaType();
@@ -140,13 +155,16 @@ public class JaxbBodyConverterTest {
             assertThat(e.getCause(), instanceOf(UnmarshalException.class));
         }
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             jaxRsContext.getRequestClass();
             result = Person.class;
+            minTimes = 0;
             jaxRsContext.getConsumesMediaType();
             result = "application/xml";
+            minTimes = 0;
             servletRequest.getReader();
             result = new IOException();
+            minTimes = 0;
         }};
 
         try {
@@ -183,7 +201,7 @@ public class JaxbBodyConverterTest {
                         + "  <name>山田太郎</name>"
                         + "</person>";
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             jaxRsContext.getRequestClass();
             result = Person.class;
             jaxRsContext.getConsumesMediaType();
@@ -210,7 +228,7 @@ public class JaxbBodyConverterTest {
     @Test
     public void test_write() throws Exception {
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             jaxRsContext.getProducesMediaType();
             result = "application/xml;charset=utf-8";
         }};
@@ -238,7 +256,7 @@ public class JaxbBodyConverterTest {
     @Test
     public void test_write_windows31j() throws Exception {
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             jaxRsContext.getProducesMediaType();
             result = "application/xml;charset=windows-31j";
         }};
@@ -270,7 +288,7 @@ public class JaxbBodyConverterTest {
         expectedException.expectMessage(is("failed to write response."));
         expectedException.expectCause(CoreMatchers.<Throwable>instanceOf(JAXBException.class));
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             jaxRsContext.getProducesMediaType();
             result = "application/xml;charset=windows-31j";
         }};
@@ -288,7 +306,7 @@ public class JaxbBodyConverterTest {
     @Test
     public void test_write_configure_success() throws Exception {
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             jaxRsContext.getProducesMediaType();
             result = "application/xml";
         }};
@@ -323,7 +341,7 @@ public class JaxbBodyConverterTest {
         expectedException.expectMessage(is("failed to configure Marshaller."));
         expectedException.expectCause(CoreMatchers.<Throwable>instanceOf(PropertyException.class));
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             jaxRsContext.getProducesMediaType();
             result = "application/xml";
         }};

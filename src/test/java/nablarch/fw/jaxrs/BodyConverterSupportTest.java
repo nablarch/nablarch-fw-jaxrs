@@ -1,14 +1,12 @@
 package nablarch.fw.jaxrs;
 
 import static nablarch.fw.jaxrs.HttpResponseMatcher.isStatusCode;
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.nio.charset.UnsupportedCharsetException;
 
-import nablarch.test.support.log.app.OnMemoryLogWriter;
 import org.hamcrest.CoreMatchers;
 
 import nablarch.fw.ExecutionContext;
@@ -17,6 +15,7 @@ import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
 import nablarch.fw.web.servlet.NablarchHttpServletRequestWrapper;
 import nablarch.fw.web.servlet.ServletExecutionContext;
+import nablarch.test.support.log.app.OnMemoryLogWriter;
 
 import org.junit.After;
 import org.junit.Before;
@@ -24,8 +23,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import mockit.Expectations;
 import mockit.Mocked;
-import mockit.NonStrictExpectations;
 import mockit.Verifications;
 
 /**
@@ -86,11 +85,13 @@ public class BodyConverterSupportTest {
      */
     @Test
     public void readSuccess_shouldReturnObjectConvertedInImplementationClass() throws Exception {
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockJaxRsContext.getRequestClass();
             result = TestBean.class;
+            minTimes = 0;
             mockJaxRsContext.getConsumesMediaType();
             result = "application/json";
+            minTimes = 0;
         }};
 
         String result = (String) sut.read(mockRequest, mockContext);
@@ -111,7 +112,7 @@ public class BodyConverterSupportTest {
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage("consumes media type and resource method signature is mismatch.");
 
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockJaxRsContext.getRequestClass();
             result = null;
         }};
@@ -123,13 +124,16 @@ public class BodyConverterSupportTest {
      */
     @Test
     public void unsupportedCharset_shouldThrowException() throws Exception {
-            new NonStrictExpectations() {{
+            new Expectations() {{
                 mockJaxRsContext.getRequestClass();
                 result = TestBean.class;
+                minTimes = 0;
                 mockJaxRsContext.getConsumesMediaType();
                 result = "application/json";
+                minTimes = 0;
                 mockServletRequest.getCharacterEncoding();
                 result = "test";
+                minTimes = 0;
             }};
         try {
             sut.read(mockRequest, mockContext);
@@ -147,9 +151,10 @@ public class BodyConverterSupportTest {
      */
     @Test
     public void writeSuccess_shouldReturnObjectConvertedInImplementationClass() throws Exception {
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockJaxRsContext.getProducesMediaType();
             result = "application/json";
+            minTimes = 0;
         }};
 
         HttpResponse response = sut.write("response object", mockContext);
@@ -163,7 +168,7 @@ public class BodyConverterSupportTest {
     public void specifiesHttpResponseToWriteMethod_shouldThrowException() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage("produces media type and resource method signature is mismatch.");
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockJaxRsContext.getProducesMediaType();
             result = "application/json";
         }};
@@ -177,11 +182,13 @@ public class BodyConverterSupportTest {
      */
     @Test
     public void changeCharset_shouldChangeCharsetOfServletRequest() throws Exception {
-        new NonStrictExpectations() {{
+        new Expectations() {{
             mockJaxRsContext.getConsumesMediaType();
             result = "application/json";
+            minTimes = 0;
             mockJaxRsContext.getRequestClass();
             result = TestBean.class;
+            minTimes = 0;
         }};
 
         sut.setDefaultEncoding("Windows-31j");
