@@ -8,6 +8,7 @@ import java.util.List;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.Handler;
 import nablarch.fw.HandlerWrapper;
+import nablarch.fw.Interceptor.Factory;
 import nablarch.fw.MethodBinder;
 import nablarch.fw.handler.MethodBinding;
 import nablarch.fw.web.HttpErrorResponse;
@@ -219,7 +220,9 @@ public class JaxRsMethodBinder implements MethodBinder<HttpRequest, Object> {
             if (handlerList != null && !handlerList.isEmpty()) {
                 ctx.addHandlers(handlerList);
             }
-            return ctx.addHandler(handler).handleNext(req);
+            final Handler<HttpRequest, Object> wrappedHandler = 
+                    Factory.wrap(handler, boundMethod.getAnnotations());
+            return ctx.addHandler(wrappedHandler).handleNext(req);
         }
     }
 }

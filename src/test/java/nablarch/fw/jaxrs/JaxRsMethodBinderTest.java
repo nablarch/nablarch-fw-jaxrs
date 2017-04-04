@@ -6,7 +6,12 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hamcrest.Description;
@@ -15,6 +20,7 @@ import org.hamcrest.TypeSafeMatcher;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.Handler;
 import nablarch.fw.HandlerWrapper;
+import nablarch.fw.Interceptor;
 import nablarch.fw.handler.MethodBinding;
 import nablarch.fw.web.HttpErrorResponse;
 import nablarch.fw.web.HttpRequest;
@@ -259,6 +265,16 @@ public class JaxRsMethodBinderTest {
         wrapper.handle(req, ctx);
     }
 
+    @Test
+    public void userInterceptor() throws Exception {
+        final JaxRsMethodBinder sut = new JaxRsMethodBinder("interceptorTest", Collections.<Handler<HttpRequest, ?>>emptyList());
+        final TestAction action = new TestAction();
+        final HandlerWrapper<HttpRequest, Object> wrapper = sut.bind(action);
+        final HttpResponse result = (HttpResponse) wrapper.handle(req, new ExecutionContext());
+        
+        assertThat("Interceptorで設定した値が戻されること", result.getContentPath().getPath(), is("TestInterceptorの戻り"));
+    }
+
     /**
      * テスト用のActionクラス。
      */
@@ -318,6 +334,24 @@ public class JaxRsMethodBinderTest {
 
         public HttpResponse throwException() throws Exception {
             throw new Exception("exception.");
+        }
+        
+        @TestInterceptor
+        public void interceptorTest() {
+        }
+    }
+    
+    @Interceptor(TestInterceptor.Impl.class)
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface TestInterceptor {
+        
+        class Impl extends Interceptor.Impl<Object, HttpResponse, TestInterceptor> {
+            @Override
+            public HttpResponse handle(final Object o, final ExecutionContext context) {
+                final Object result = getOriginalHandler().handle(o, context);
+                return new HttpResponse("TestInterceptorの戻り");
+            }
         }
     }
 

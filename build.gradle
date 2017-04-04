@@ -1,5 +1,5 @@
 group = 'com.nablarch.framework'
-version = '1.0.2'
+version = '1.0.3'
 description = 'JAX-RS'
 
 buildscript {
@@ -100,12 +100,10 @@ dependencies {
 
 test {
   ignoreFailures = true
-
   jvmArgs(
       '-XX:+UseParallelGC',
       '-Dfile.encoding=UTF-8'
   )
-
   classpath = sourceSets.test.runtimeClasspath + configurations.glassfish
 }
 
