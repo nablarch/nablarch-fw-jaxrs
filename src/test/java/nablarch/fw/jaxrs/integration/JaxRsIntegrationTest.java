@@ -2,8 +2,7 @@ package nablarch.fw.jaxrs.integration;
 
 
 import static junit.framework.TestCase.fail;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
 import java.io.File;
@@ -22,8 +21,6 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.javanet.NetHttpTransport;
-import nablarch.test.support.log.app.OnMemoryLogWriter;
-
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
@@ -34,6 +31,7 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import nablarch.fw.jaxrs.integration.app.IntegrationTestResource;
 import nablarch.fw.jaxrs.integration.app.Person;
 import nablarch.fw.jaxrs.integration.app.Persons;
+import nablarch.test.support.log.app.OnMemoryLogWriter;
 
 import org.junit.After;
 import org.junit.Before;
@@ -687,6 +685,21 @@ public class JaxRsIntegrationTest {
             assertThat("ボディは空であること", e.getContent(), is(nullValue()));
             OnMemoryLogWriter.assertLogContains("writer.memory", "consumes charset is invalid. charset = [test]", "status code=[400]");
         }
+    }
+
+    /**
+     * Interceptorが適用できることを確認する
+     *
+     * @throws Exception
+     */
+    @Test
+    @RunAsClient
+    public void testInterceptor() throws Exception {
+        String response = ClientBuilder.newClient()
+                                       .target(new URL(baseUrl, "action/simple/interceptor").toURI())
+                                       .request()
+                                       .get(String.class);
+        assertThat("Interceptorで編集した値が戻されること", response, is("[OK]"));
     }
 
     public static class Res {

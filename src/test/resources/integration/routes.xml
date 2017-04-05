@@ -30,4 +30,6 @@
   <match path="action/error/notexist" to="Error#notExist" />
 
   <match path="action/:controller/:action" />
+  
+  <match path="/action/simple/interceptor" to="Simple#interceptor" />
 </routes>

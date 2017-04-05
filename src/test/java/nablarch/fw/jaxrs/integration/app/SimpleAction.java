@@ -1,15 +1,21 @@
 package nablarch.fw.jaxrs.integration.app;
 
 import java.io.Serializable;
-
-import nablarch.core.beans.BeanUtil;
-import nablarch.core.validation.ee.Required;
-import nablarch.fw.web.HttpRequest;
-import nablarch.fw.web.HttpResponse;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.core.MediaType;
+
+import nablarch.core.beans.BeanUtil;
+import nablarch.core.validation.ee.Required;
+import nablarch.fw.ExecutionContext;
+import nablarch.fw.Interceptor;
+import nablarch.fw.web.HttpRequest;
+import nablarch.fw.web.HttpResponse;
 
 public class SimpleAction {
 
@@ -80,6 +86,46 @@ public class SimpleAction {
         @Required
         public void setId(Long id) {
             this.id = id;
+        }
+    }
+    
+    @Interceptor1
+    @Interceptor2
+    public HttpResponse interceptor() throws Exception {
+        final HttpResponse response = new HttpResponse();
+        response.write("OK");
+        return response;
+    }
+
+    @Interceptor(Interceptor1.Impl.class)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface Interceptor1 {
+        
+        class Impl extends Interceptor.Impl<Object, HttpResponse, Interceptor1> {
+            @Override
+            public HttpResponse handle(final Object o, final ExecutionContext context) {
+                final HttpResponse response = getOriginalHandler().handle(o, context);
+                final HttpResponse result = new HttpResponse();
+                result.write('[' + response.getBodyString());
+                return result;
+            }
+        }
+    }
+    
+    @Interceptor(Interceptor2.Impl.class)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface Interceptor2 {
+
+        class Impl extends Interceptor.Impl<Object, HttpResponse, Interceptor2> {
+            @Override
+            public HttpResponse handle(final Object o, final ExecutionContext context) {
+                final HttpResponse response = getOriginalHandler().handle(o, context);
+                final HttpResponse result = new HttpResponse();
+                result.write(response.getBodyString() + ']');
+                return result;
+            }
         }
     }
 }
