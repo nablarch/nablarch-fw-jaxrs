@@ -1,5 +1,7 @@
 package nablarch.fw.jaxrs.integration.app;
 
+import java.io.Serializable;
+
 import nablarch.core.validation.ee.Domain;
 
 import javax.persistence.Entity;
@@ -12,7 +14,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "person")
 @XmlRootElement
-public class Person {
+public class Person implements Serializable {
 
     private Long id;
     private String name;
