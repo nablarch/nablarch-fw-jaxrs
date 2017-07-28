@@ -99,7 +99,6 @@ dependencies {
 }
 
 test {
-  ignoreFailures = true
   jvmArgs(
       '-XX:+UseParallelGC',
       '-Dfile.encoding=UTF-8'
@@ -122,7 +121,6 @@ task jbossIntegrationTest(type: Test, dependsOn: testClasses) {
   environment('JBOSS_HOME', System.getProperty('JBOSS_HOME'))
   environment('JDK8_HOME', System.getenv('JAVA_HOME'))
 
-  ignoreFailures = true
 
   jvmArgs(
       '-XX:+UseParallelGC'
