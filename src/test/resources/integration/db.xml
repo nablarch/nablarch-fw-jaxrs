@@ -24,7 +24,7 @@
     </property>
     <property name="statementFactory" ref="statementFactory" />
     <property name="dialect">
-      <component class="nablarch.fw.jaxrs.integration.app.H2Dialect" />
+      <component class="nablarch.core.db.dialect.H2Dialect" />
     </property>
   </component>
   <!-- データベースアクセス例外用の設定 -->
