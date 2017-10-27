@@ -16,6 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -305,6 +306,27 @@ public class JaxRsIntegrationTest {
         assertThat(response.getLength(), is(0));
         assertThat(testResource.findAllPerson().size(), is(1));
     }
+    
+    public static class P {
+        Long id = 1L;
+        String name = "012345678901234567890123456789012";
+
+        public void setId(final Long id) {
+            this.id = id;
+        }
+
+        public void setName(final String name) {
+            this.name = name;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
 
     /**
      * テーブルにレコードを登録する際に、バリデーションエラーが発生するケース。
@@ -316,7 +338,7 @@ public class JaxRsIntegrationTest {
         Response response = ClientBuilder.newClient()
                 .target(new URL(baseUrl, "action/person/json").toURI())
                 .request(MediaType.APPLICATION_JSON)
-                .post(Entity.entity(new Person(1L, "012345678901234567890123456789012"), MediaType.APPLICATION_JSON));
+                .post(Entity.entity(new P(), MediaType.APPLICATION_JSON));
 
         assertThat(response.getStatus(), is(400));
         assertThat(response.getLength(), is(0));
