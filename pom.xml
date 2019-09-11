@@ -41,6 +41,7 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <excludes>
+                <!-- テストで使用しているAPサーバ（glassfish）が現状java11に対応していないため除外 -->
                 <exclude>nablarch.fw.jaxrs.integration.JaxRsIntegrationTest</exclude>
               </excludes>
             </configuration>
