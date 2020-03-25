@@ -449,6 +449,41 @@ public class JaxRsResponseHandlerTest {
     }
 
     /**
+     * 異常系カスタムの{@link ErrorResponseBuilder}はエラが発生する場合、500エラーでレスポンスを返すこと。
+     */
+    @Test
+    public void testCustomErrorResponseBuilderNG() throws Exception {
+        // -------------------------------------------------- setup
+        sut.setErrorResponseBuilder(new ErrorResponseBuilder() {
+            @Override
+            public HttpResponse build(HttpRequest request, ExecutionContext context, Throwable throwable) {
+            	throw new NullPointerException("error");
+            }
+        });
+        context.addHandler(new Handler<Object, Object>() {
+            @Override
+            public Object handle(Object o, ExecutionContext context) {
+                throw new NullPointerException("error");
+            }
+        });
+
+        // -------------------------------------------------- execute
+        HttpResponse response = sut.handle(mockHttpRequest, context);
+
+        // -------------------------------------------------- assert
+        assertThat("500でビルダーが作成したレスポンスが書き込まれること", response, isStatusCode(500).withBody(""));
+        assertThat("ServletOutputStreamに書き込まれたボティの長さも0であること",
+                getBodyString(), is(""));
+        new Verifications() {{
+            // servlet responseに500のステータスコードが設定されていること
+            mockServletResponse.setStatus(500);
+        }};
+
+        // ログに障害通知と障害解析のログが出力されること
+        OnMemoryLogWriter.assertLogContains("writer.memory", "FATAL monitor", "FATAL ROO");
+    }
+    
+    /**
      * カスタムの{@link JaxRsErrorLogWriter}が使用できること。
      */
     @Test

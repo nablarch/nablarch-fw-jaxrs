@@ -22,6 +22,7 @@ import nablarch.fw.web.servlet.ServletExecutionContext;
  * <p/>
  * このハンドラでは、後続のハンドラから戻された{@link HttpResponse}の内容を、クライアントへのレスポンスとして書き込む。
  * 後続のハンドラで例外が発生した場合には、{@link ErrorResponseBuilder}を使用してエラー用のレスポンスを作成し、クライアントへのレスポンスとして書き込む。
+ * {@link ErrorResponseBuilder}を独自カスタマイズした場合に、エラーが出たら、500エラーでレスポンスを返す。
  * <p/>
  * 後続のハンドラ及び{@link ErrorResponseBuilder}で{@link HttpResponse}を生成する際には、レスポンスヘッダーも含めて設定する必要がある。
  * このハンドラでは、レスポンスヘッダーを自動的に設定するようなことはしない。
@@ -50,7 +51,11 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
         } catch (HttpErrorResponse errorResponse) {
             response = errorResponse.getResponse();
         } catch (Throwable e) {
-            response = errorResponseBuilder.build(request, context, e);
+        	try {
+        		response = errorResponseBuilder.build(request, context, e);
+        	} catch (Throwable e1) {
+        		response = new HttpResponse(500);
+        	}
             errorLogWriter.write(request, response, context, e);
         }
         if (LOGGER.isDebugEnabled()) {
