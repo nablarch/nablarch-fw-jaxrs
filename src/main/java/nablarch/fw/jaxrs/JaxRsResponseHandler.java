@@ -95,7 +95,14 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
         if (response.getContentLength() != null) {
             nativeResponse.setContentLength(Integer.parseInt(response.getContentLength()));
         }
-        nativeResponse.setContentType(response.getContentType());
+        // HttpResponse.getContentTypeはContent-Typeが設定されていない場合に
+        // text/plain;charset=UTF-8が設定されるようになっている。
+        // レスポンスボディがない場合はContent-Typeを設定する必要はないため、
+        // 自動的にデフォルト値が設定されてしまうHttpResponse.getContentTypeは使わない。
+        String contentType = response.getHeader("Content-Type");
+        if (contentType != null) {
+            nativeResponse.setContentType(contentType);
+        }
         for (Map.Entry<String, String> entry : response.getHeaderMap().entrySet()) {
             if (!entry.getKey().equals("Content-Length") && !entry.getKey().equals("Content-Type")) {
                 nativeResponse.setHeader(entry.getKey(), entry.getValue());
