@@ -42,6 +42,8 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
     /** ロガー */
     private static final Logger LOGGER = LoggerManager.get(JaxRsResponseHandler.class);
 
+    private boolean useGetContentType;
+
     @Override
     public HttpResponse handle(HttpRequest request, ExecutionContext context) {
         HttpResponse response;
@@ -95,13 +97,18 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
         if (response.getContentLength() != null) {
             nativeResponse.setContentLength(Integer.parseInt(response.getContentLength()));
         }
-        // HttpResponse.getContentTypeはContent-Typeが設定されていない場合に
-        // text/plain;charset=UTF-8が設定されるようになっている。
-        // レスポンスボディがない場合はContent-Typeを設定する必要はないため、
-        // 自動的にデフォルト値が設定されてしまうHttpResponse.getContentTypeは使わない。
-        String contentType = response.getHeader("Content-Type");
-        if (contentType != null) {
-            nativeResponse.setContentType(contentType);
+        if (useGetContentType) {
+            // Nablarch 5u17までの挙動を望む場合のため、フラグで選択できるようにする
+            nativeResponse.setContentType(response.getContentType());
+        } else {
+            // HttpResponse.getContentTypeはContent-Typeが設定されていない場合に
+            // text/plain;charset=UTF-8が設定されるようになっている。
+            // レスポンスボディがない場合はContent-Typeを設定する必要はないため、
+            // 自動的にデフォルト値が設定されてしまうHttpResponse.getContentTypeは使わない。
+            String contentType = response.getHeader("Content-Type");
+            if (contentType != null) {
+                nativeResponse.setContentType(contentType);
+            }
         }
         for (Map.Entry<String, String> entry : response.getHeaderMap().entrySet()) {
             if (!entry.getKey().equals("Content-Length") && !entry.getKey().equals("Content-Type")) {
@@ -155,6 +162,10 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
      */
     public void setErrorLogWriter(final JaxRsErrorLogWriter errorLogWriter) {
         this.errorLogWriter = errorLogWriter;
+    }
+
+    public void setUseGetContentType(boolean useGetContentType) {
+        this.useGetContentType = useGetContentType;
     }
 }
 
