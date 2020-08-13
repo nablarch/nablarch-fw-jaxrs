@@ -124,6 +124,48 @@ public class JaxRsResponseHandlerTest {
         new Verifications() {{
             // servlet responseに201ステータスコードが設定されていること
             mockServletResponse.setStatus(201);
+
+            mockServletResponse.setContentType(null); times=0;
+        }};
+    }
+
+    /**
+     * ボディを持たないレスポンスでもContent-Typeを設定する場合のテスト。
+     * <p/>
+     * HttpResponse.getContentTypeはContent-Typeが設定されていない場合に
+     * text/plain;charset=UTF-8が設定されるようになっている。
+     * text/plain;charset=UTF-8が設定されること。
+     */
+    @Test
+    public void testStatusCodeOnlyResponseWithSetContentTypeForResponseWithNoBody() throws Exception {
+        // -------------------------------------------------- setup
+        context.addHandler(new Handler<Object, Object>() {
+            @Override
+            public Object handle(Object o, ExecutionContext context) {
+                return new HttpResponse(HttpResponse.Status.CREATED.getStatusCode());
+            }
+        });
+        new Expectations() {{
+            mockHttpRequest.getMethod();
+            result = "GET";
+            mockHttpRequest.getRequestUri();
+            result = "/api/user";
+        }};
+
+        // -------------------------------------------------- execute
+        sut.setSetContentTypeForResponseWithNoBody(true);
+        HttpResponse response = sut.handle(mockHttpRequest, context);
+        sut.setSetContentTypeForResponseWithNoBody(false);
+
+        // -------------------------------------------------- assert
+        assertThat("201でボディが空のHttpResponseが戻される", response, isStatusCode(201).withEmptyBody());
+        assertThat("ServletOutputStreamに書き込まれたボティの長さも0であること",
+                getBodyString(), is(""));
+        new Verifications() {{
+            // servlet responseに201ステータスコードが設定されていること
+            mockServletResponse.setStatus(201);
+
+            mockServletResponse.setContentType("text/plain;charset=UTF-8");
         }};
     }
 
@@ -452,7 +494,7 @@ public class JaxRsResponseHandlerTest {
      * カスタムの{@link JaxRsErrorLogWriter}が使用できること。
      */
     @Test
-    public void testCustomErrorLogWriter() throws Exception {
+    public void testCustomErrorLogWriter() {
         // -------------------------------------------------- setup
         sut.setErrorLogWriter(new JaxRsErrorLogWriter() {
             @Override
@@ -516,14 +558,12 @@ public class JaxRsResponseHandlerTest {
         context.addHandler(new Handler<Object, Object>() {
             @Override
             public Object handle(Object o, ExecutionContext context) {
-                HttpResponse response = new HttpResponse(200) {
+                return new HttpResponse(200) {
                     @Override
                     public InputStream getBodyStream() {
                         return null;
                     }
                 };
-
-                return response;
             }
         });
 

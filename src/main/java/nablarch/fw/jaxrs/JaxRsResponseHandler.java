@@ -42,7 +42,8 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
     /** ロガー */
     private static final Logger LOGGER = LoggerManager.get(JaxRsResponseHandler.class);
 
-    private boolean useGetContentType;
+    /** ボディを持たないレスポンスでもContent-Typeを設定するか否か */
+    private boolean setContentTypeForResponseWithNoBody = false;
 
     @Override
     public HttpResponse handle(HttpRequest request, ExecutionContext context) {
@@ -97,7 +98,7 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
         if (response.getContentLength() != null) {
             nativeResponse.setContentLength(Integer.parseInt(response.getContentLength()));
         }
-        if (useGetContentType) {
+        if (setContentTypeForResponseWithNoBody) {
             // Nablarch 5u17までの挙動を望む場合のため、フラグで選択できるようにする
             nativeResponse.setContentType(response.getContentType());
         } else {
@@ -164,8 +165,15 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
         this.errorLogWriter = errorLogWriter;
     }
 
-    public void setUseGetContentType(boolean useGetContentType) {
-        this.useGetContentType = useGetContentType;
+    /**
+     * ボディを持たないレスポンスでもContent-Typeを設定するか否かを設定する。
+     *
+     * デフォルトはfalse。
+     *
+     * @param setContentTypeForResponseWithNoBody ボディを持たないレスポンスでもContent-Typeを設定する場合はtrue
+     */
+    public void setSetContentTypeForResponseWithNoBody(boolean setContentTypeForResponseWithNoBody) {
+        this.setContentTypeForResponseWithNoBody = setContentTypeForResponseWithNoBody;
     }
 }
 
