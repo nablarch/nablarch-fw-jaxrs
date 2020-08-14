@@ -3,6 +3,7 @@ package nablarch.fw.jaxrs;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import nablarch.core.log.Logger;
 import nablarch.core.log.LoggerManager;
@@ -54,12 +55,45 @@ public class BodyConvertHandler implements HttpRequestHandler {
             return new HttpResponse(Status.NO_CONTENT.getStatusCode());
         }
 
+        final EntityResponse entityResponse = response instanceof EntityResponse ? (EntityResponse) response : null;
+        final Object entity = entityResponse != null ? entityResponse.getEntity() : response;
+
         final String producesMediaType = jaxRsContext.getProducesMediaType();
         if (StringUtil.hasValue(producesMediaType)) {
-            return findConverter(producesMediaType).write(response, context);
+            HttpResponse convertedResponse = findConverter(producesMediaType).write(entity, context);
+            if (entityResponse != null) {
+                copy(entityResponse, convertedResponse);
+            }
+            return convertedResponse;
         }
 
         return cast(response);
+    }
+
+    /**
+     * {@link EntityResponse}からコンバートされた{@link HttpResponse}にコピーする。
+     *
+     * レスポンスヘッダとステータスコードをコピーする。
+     * レスポンスヘッダは上書きしない。
+     * ステータスコードは指定された場合のみコピーする。
+     *
+     * @param from {@link EntityResponse}
+     * @param to コンバートされた{@link HttpResponse}
+     */
+    private void copy(EntityResponse from, HttpResponse to) {
+
+        // response header
+        final Map<String, String> toHeaderMap = to.getHeaderMap();
+        for (Map.Entry<String, String> fromHeader : from.getHeaderMap().entrySet()) {
+            if (!toHeaderMap.containsKey(fromHeader.getKey())) {
+                toHeaderMap.put(fromHeader.getKey(), fromHeader.getValue());
+            }
+        }
+
+        // status code
+        if (from.isStatusCodeSet()) {
+            to.setStatusCode(from.getStatusCode());
+        }
     }
 
     /**

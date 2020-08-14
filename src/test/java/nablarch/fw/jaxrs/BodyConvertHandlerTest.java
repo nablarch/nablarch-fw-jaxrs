@@ -156,6 +156,57 @@ public class BodyConvertHandlerTest {
     }
 
     /**
+     * EntityResponseを使い、レスポンスヘッダとステータスコードが指定された場合。
+     *
+     * 指定されたレスポンスヘッダとステータスコードがレスポンスに設定されていること。
+     */
+    @Test
+    public void entityResponse() {
+
+        final ExecutionContext context = executionContext("entityResponse");
+
+        // add resource method invoking
+        context.addHandler(new Handler<HttpRequest, Object>() {
+            @Override
+            public Object handle(final HttpRequest request, final ExecutionContext exeContext) {
+                return new TestAction().entityResponse(request);
+            }
+        });
+
+        HttpResponse response = context.handleNext(mockRequest);
+
+        assertThat(response, isStatusCode(505).withBody("TestForm:0")); // not counted up
+        assertThat(testBodyConverter.readCount, is(0));
+        assertThat(testBodyConverter.writeCount, is(1));
+        assertThat(response.getHeaderMap().size(), is(3));
+        assertThat(response.getHeader("test-name"), is("test-value"));
+    }
+
+    /**
+     * EntityResponseを使い、レスポンスヘッダとステータスコードを指定しなかった場合。
+     */
+    @Test
+    public void entityResponseNoneSpecified() {
+
+        final ExecutionContext context = executionContext("entityResponseNoneSpecified");
+
+        // add resource method invoking
+        context.addHandler(new Handler<HttpRequest, Object>() {
+            @Override
+            public Object handle(final HttpRequest request, final ExecutionContext exeContext) {
+                return new TestAction().entityResponseNoneSpecified(request);
+            }
+        });
+
+        HttpResponse response = context.handleNext(mockRequest);
+
+        assertThat(response, isStatusCode(202).withBody("TestForm:0")); // not counted up
+        assertThat(testBodyConverter.readCount, is(0));
+        assertThat(testBodyConverter.writeCount, is(1));
+        assertThat(response.getHeaderMap().size(), is(2));
+    }
+
+    /**
      * Consumes/Producesが付いている場合。
      *
      * {@link BodyConverter#read(HttpRequest, ExecutionContext)}、
@@ -231,7 +282,7 @@ public class BodyConvertHandlerTest {
      * 415が返されること
      */
     @Test
-    public void withContentTypeAndWithoutConsumes() throws Exception {
+    public void withContentTypeAndWithoutConsumes() {
         new Expectations() {{
             mockRequest.getHeader("Content-Type");
             result = "application/json";
@@ -383,7 +434,7 @@ public class BodyConvertHandlerTest {
      * を返すコンバーターでボディの変換処理が行われること。
      */
     @Test
-    public void multipleBodyConverter_shouldExecuteConvertibleConverter() throws Exception {
+    public void multipleBodyConverter_shouldExecuteConvertibleConverter() {
         sut.setBodyConverters(new ArrayList<BodyConverter>() {{
             add(new BodyConverter() {
                 @Override
@@ -444,7 +495,7 @@ public class BodyConvertHandlerTest {
      *
      */
     @Test
-    public void multipleConvertibleBodyConverter_shouldExecuteFirstConvertibleConverter() throws Exception {
+    public void multipleConvertibleBodyConverter_shouldExecuteFirstConvertibleConverter() {
         sut.setBodyConverters(new ArrayList<BodyConverter>() {{
             add(new BodyConverter() {
                 @Override
@@ -506,7 +557,7 @@ public class BodyConvertHandlerTest {
      * {@link Status#UNSUPPORTED_MEDIA_TYPE}を持つ{@link HttpErrorResponse}が送出されること
      */
     @Test
-    public void readConverterNotFound_shouldThrowUnsupportedMediaType() throws Exception {
+    public void readConverterNotFound_shouldThrowUnsupportedMediaType() {
         sut.setBodyConverters(new ArrayList<BodyConverter>() {{
             add(new BodyConverter() {
                 @Override
@@ -558,6 +609,22 @@ public class BodyConvertHandlerTest {
             return new TestForm();
         }
 
+        @Produces(MediaType.APPLICATION_XML)
+        public EntityResponse entityResponse(HttpRequest request) {
+            EntityResponse response = new EntityResponse();
+            response.setEntity(new TestForm());
+            response.setStatusCode(505);
+            response.setHeader("test-name", "test-value");
+            return response;
+        }
+
+        @Produces(MediaType.APPLICATION_XML)
+        public EntityResponse entityResponseNoneSpecified(HttpRequest request) {
+            EntityResponse response = new EntityResponse();
+            response.setEntity(new TestForm());
+            return response;
+        }
+
         @Consumes(MediaType.APPLICATION_JSON)
         @Produces(MediaType.APPLICATION_XML)
         public TestForm consumesAndProduces(TestForm testForm) {
@@ -602,5 +669,4 @@ public class BodyConvertHandlerTest {
             return true;
         }
     }
-
 }
