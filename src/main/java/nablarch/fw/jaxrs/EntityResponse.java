@@ -1,5 +1,6 @@
 package nablarch.fw.jaxrs;
 
+import nablarch.core.util.annotation.Published;
 import nablarch.fw.web.HttpResponse;
 
 /**
@@ -32,12 +33,14 @@ public class EntityResponse extends HttpResponse {
      *
      * @param entity エンティティ
      */
+    @Published
     public EntityResponse setEntity(Object entity) {
         this.entity = entity;
         return this;
     }
 
     @Override
+    @Published
     public HttpResponse setStatusCode(int code) {
         statusCodeSet = true;
         return super.setStatusCode(code);
