@@ -53,7 +53,13 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
         } catch (HttpErrorResponse errorResponse) {
             response = errorResponse.getResponse();
         } catch (Throwable e) {
-            response = errorResponseBuilder.build(request, context, e);
+            try {
+                response = errorResponseBuilder.build(request, context, e);
+            } catch (Throwable responseBuilderException) {
+                response = new HttpResponse(500);
+                LOGGER.logWarn("An exception was thrown while processing ErrorResponseBuilder. "
+                        + "class=[" + errorResponseBuilder.getClass().getName() + "]", responseBuilderException);
+            }
             errorLogWriter.write(request, response, context, e);
         }
         if (LOGGER.isDebugEnabled()) {
