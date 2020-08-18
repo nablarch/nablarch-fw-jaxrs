@@ -183,6 +183,62 @@ public class BodyConvertHandlerTest {
     }
 
     /**
+     * EntityResponseを使い、Content-Typeが指定された場合。
+     *
+     * EntityResponseに指定されたエンティティとContent-Typeでボディが変換されること。
+     */
+    @Test
+    public void entityResponseWithContentType() {
+
+        final ExecutionContext context = executionContext("entityResponseWithContentType");
+
+        // add resource method invoking
+        context.addHandler(new Handler<HttpRequest, Object>() {
+            @Override
+            public Object handle(final HttpRequest request, final ExecutionContext exeContext) {
+                return new TestAction().entityResponseWithContentType(request);
+            }
+        });
+
+        HttpResponse response = context.handleNext(mockRequest);
+
+        assertThat(response, isStatusCode(505).withBody("TestForm:0")); // not counted up
+        assertThat(testBodyConverter.readCount, is(0));
+        assertThat(testBodyConverter.writeCount, is(1));
+        assertThat(response.getHeaderMap().size(), is(3));
+        assertThat(response.getHeader("test-name"), is("test-value"));
+    }
+
+    /**
+     * ProducesアノテーションとEntityResponseでContent-Typeが指定された場合。
+     *
+     * どちらか一方でContent-Typeを指定するように実行時例外が送出されること。
+     */
+    @Test
+    public void invalidContentType() {
+
+        final ExecutionContext context = executionContext("invalidContentType");
+
+        // add resource method invoking
+        context.addHandler(new Handler<HttpRequest, Object>() {
+            @Override
+            public Object handle(final HttpRequest request, final ExecutionContext exeContext) {
+                return new TestAction().invalidContentType(request);
+            }
+        });
+
+        try {
+            context.handleNext(mockRequest);
+            fail("IllegalStateExceptionがスローされるはず");
+        } catch (IllegalStateException e) {
+            assertThat(e.getMessage(), is(
+                    "Content-Type is specified in both @Produces and EntityResponse. "
+                    + "Specify the Content-Type in either @Produces or EntityResponse. "
+                    + "resource method = [nablarch.fw.jaxrs.BodyConvertHandlerTest$TestAction#invalidContentType]"));
+        }
+    }
+
+    /**
      * EntityResponseを使い、レスポンスヘッダとステータスコードを指定しなかった場合。
      */
     @Test
@@ -615,6 +671,22 @@ public class BodyConvertHandlerTest {
             response.setEntity(new TestForm());
             response.setStatusCode(505);
             response.setHeader("test-name", "test-value");
+            return response;
+        }
+
+        public EntityResponse entityResponseWithContentType(HttpRequest request) {
+            EntityResponse response = new EntityResponse();
+            response.setEntity(new TestForm());
+            response.setContentType(MediaType.APPLICATION_JSON);
+            response.setStatusCode(505);
+            response.setHeader("test-name", "test-value");
+            return response;
+        }
+
+        @Produces(MediaType.APPLICATION_XML)
+        public EntityResponse invalidContentType(HttpRequest request) {
+            EntityResponse response = new EntityResponse();
+            response.setContentType(MediaType.APPLICATION_JSON);
             return response;
         }
 

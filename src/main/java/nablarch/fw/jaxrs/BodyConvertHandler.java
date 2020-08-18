@@ -58,7 +58,18 @@ public class BodyConvertHandler implements HttpRequestHandler {
         final EntityResponse entityResponse = response instanceof EntityResponse ? (EntityResponse) response : null;
         final Object entity = entityResponse != null ? entityResponse.getEntity() : response;
 
-        final String producesMediaType = jaxRsContext.getProducesMediaType();
+        String producesMediaType = jaxRsContext.getProducesMediaType();
+        final String entityResponseContentType = entityResponse != null ? entityResponse.getHeader("Content-Type") : null;
+        if (StringUtil.hasValue(entityResponseContentType)) {
+            if (StringUtil.hasValue(producesMediaType)) {
+                throw new IllegalStateException(
+                        "Content-Type is specified in both @Produces and EntityResponse. "
+                                + "Specify the Content-Type in either @Produces or EntityResponse. "
+                                + "resource method = [" + jaxRsContext.toResourcePath() + "]");
+            }
+            producesMediaType = entityResponseContentType;
+        }
+
         if (StringUtil.hasValue(producesMediaType)) {
             HttpResponse convertedResponse = findConverter(producesMediaType).write(entity, context);
             if (entityResponse != null) {
