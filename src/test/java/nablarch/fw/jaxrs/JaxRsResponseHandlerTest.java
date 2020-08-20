@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -552,6 +553,58 @@ public class JaxRsResponseHandlerTest {
         // -------------------------------------------------- assert
         assertThat("500であること", response, isStatusCode(500).withEmptyBody());
         OnMemoryLogWriter.assertLogContains("writer.memory", "WARN ROO エラーが発生しました: invalid");
+    }
+
+    /**
+     * レスポンスフィニッシャーのテスト。
+     * <p/>
+     * 指定されたレスポンスフィニッシャーによりレスポンスが変更されること
+     */
+    @Test
+    public void testResponseFinisher() throws Exception {
+        // -------------------------------------------------- setup
+        context.addHandler(new Handler<Object, Object>() {
+            @Override
+            public Object handle(Object o, ExecutionContext context) {
+                return new HttpResponse(HttpResponse.Status.CREATED.getStatusCode());
+            }
+        });
+        new Expectations() {{
+            mockHttpRequest.getMethod();
+            result = "GET";
+            mockHttpRequest.getRequestUri();
+            result = "/api/user";
+        }};
+
+        // -------------------------------------------------- execute
+        sut.setResponseFinishers(Arrays.asList(
+                new ResponseFinisher() {
+                    @Override
+                    public void finish(HttpRequest request, HttpResponse response, ExecutionContext context) {
+                        response.setHeader("test1", "aaa");
+                    }
+                },
+                new ResponseFinisher() {
+                    @Override
+                    public void finish(HttpRequest request, HttpResponse response, ExecutionContext context) {
+                        response.setHeader("test2", "bbb");
+                    }
+                }
+        ));
+        HttpResponse response = sut.handle(mockHttpRequest, context);
+
+        // -------------------------------------------------- assert
+        assertThat("201でボディが空のHttpResponseが戻される", response, isStatusCode(201).withEmptyBody());
+        assertThat("ServletOutputStreamに書き込まれたボティの長さも0であること",
+                getBodyString(), is(""));
+        assertThat(response.getHeader("test1"), is("aaa"));
+        assertThat(response.getHeader("test2"), is("bbb"));
+        new Verifications() {{
+            // servlet responseに201ステータスコードが設定されていること
+            mockServletResponse.setStatus(201);
+
+            mockServletResponse.setContentType(null); times=0;
+        }};
     }
 
     /**
