@@ -64,7 +64,7 @@ public class BasicCorsTest {
 
         assertThat(response.getStatusCode(), is(204));
         assertThat(response.getHeader("Access-Control-Allow-Methods"),
-                is("OPTIONS, GET, POST, PUT, DELETE"));
+                is("OPTIONS, GET, POST, PUT, DELETE, PATCH"));
         assertThat(response.getHeader("Access-Control-Allow-Headers"),
                 is("Content-Type, X-CSRF-TOKEN"));
         assertThat(response.getHeader("Access-Control-Max-Age"), is("-1"));
@@ -126,7 +126,7 @@ public class BasicCorsTest {
 
         assertThat(response.getStatusCode(), is(204));
         assertThat(response.getHeader("Access-Control-Allow-Methods"),
-                is("OPTIONS, GET, POST, PUT, DELETE"));
+                is("OPTIONS, GET, POST, PUT, DELETE, PATCH"));
         assertThat(response.getHeader("Access-Control-Allow-Headers"),
                 is("Content-Type, X-CSRF-TOKEN"));
         assertThat(response.getHeader("Access-Control-Max-Age"), is("-1"));

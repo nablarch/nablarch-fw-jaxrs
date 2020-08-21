@@ -20,7 +20,7 @@ public class BasicCors implements Cors {
     private static final Logger LOGGER = LoggerManager.get(Cors.class);
 
     private List<String> allowOrigins = null;
-    private String allowMethods = joinWithComma(Arrays.asList("OPTIONS", "GET", "POST", "PUT", "DELETE"));
+    private String allowMethods = joinWithComma(Arrays.asList("OPTIONS", "GET", "POST", "PUT", "DELETE", "PATCH"));
     private String allowHeaders = joinWithComma(Arrays.asList("Content-Type", "X-CSRF-TOKEN"));
     private long maxAge = -1;
     private boolean allowCredentials = true;
