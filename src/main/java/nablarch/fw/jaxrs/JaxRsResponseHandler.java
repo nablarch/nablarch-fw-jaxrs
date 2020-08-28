@@ -3,6 +3,8 @@ package nablarch.fw.jaxrs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -39,6 +41,9 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
     /** エラー情報を出力するライター */
     private JaxRsErrorLogWriter errorLogWriter = new JaxRsErrorLogWriter();
 
+    /** レスポンスフィニッシャー */
+    private List<ResponseFinisher> responseFinishers = Collections.emptyList();
+
     /** ロガー */
     private static final Logger LOGGER = LoggerManager.get(JaxRsResponseHandler.class);
 
@@ -62,6 +67,7 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
             }
             errorLogWriter.write(request, response, context, e);
         }
+        finishResponse(request, response, context);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.logDebug(request.getMethod() + ' ' + request.getRequestUri() + " status code=[" + response.getStatusCode() + "], content length=[" + response.getContentLength() + ']');
         }
@@ -69,6 +75,18 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
         return response;
     }
 
+    /**
+     * レスポンスを仕上げる。
+     *
+     * @param request リクエスト
+     * @param response レスポンス
+     * @param context コンテキスト
+     */
+    protected void finishResponse(HttpRequest request, HttpResponse response, ExecutionContext context) {
+        for (ResponseFinisher responseFinisher : responseFinishers) {
+            responseFinisher.finish(request, response, context);
+        }
+    }
     /**
      * レスポンスを書き込む。
      *
@@ -169,6 +187,14 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
      */
     public void setErrorLogWriter(final JaxRsErrorLogWriter errorLogWriter) {
         this.errorLogWriter = errorLogWriter;
+    }
+
+    /**
+     * レスポンスフィニッシャーを設定する。
+     * @param responseFinishers レスポンスフィニッシャー
+     */
+    public void setResponseFinishers(List<ResponseFinisher> responseFinishers) {
+        this.responseFinishers = responseFinishers;
     }
 
     /**
