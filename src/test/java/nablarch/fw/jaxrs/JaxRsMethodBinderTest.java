@@ -290,6 +290,16 @@ public class JaxRsMethodBinderTest {
         assertThat(method, is(nothingMethod));
     }
 
+    @Test
+    public void testBind_delegateObjectClassIsSetToScopeAsBoundClass() {
+        sut = new JaxRsMethodBinder("nothing", dummyHandlers);
+        HandlerWrapper<HttpRequest, Object> wrapper = sut.bind(new TestSubAction());
+        wrapper.handle(req, ctx);
+
+        Class<?> clazz = ctx.getRequestScopedVar(MethodBinding.SCOPE_VAR_NAME_BOUND_CLASS);
+        assertThat(clazz, is((Object)TestSubAction.class));
+    }
+
     /**
      * テスト用のActionクラス。
      */
@@ -355,7 +365,9 @@ public class JaxRsMethodBinderTest {
         public void interceptorTest() {
         }
     }
-    
+
+    private static class TestSubAction extends TestAction {}
+
     @Interceptor(TestInterceptor.Impl.class)
     @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.RUNTIME)
