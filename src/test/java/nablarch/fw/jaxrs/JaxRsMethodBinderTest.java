@@ -10,6 +10,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -275,6 +276,30 @@ public class JaxRsMethodBinderTest {
         assertThat("Interceptorで設定した値が戻されること", result.getContentPath().getPath(), is("TestInterceptorの戻り"));
     }
 
+    @Test
+    public void testBind_resourceClassAndMethodAreSavedInRequestScope() throws Exception {
+        sut = new JaxRsMethodBinder("nothing", dummyHandlers);
+        HandlerWrapper<HttpRequest, Object> wrapper = sut.bind(new TestAction());
+        wrapper.handle(req, ctx);
+
+        Class<?> clazz = ctx.getRequestScopedVar(MethodBinding.SCOPE_VAR_NAME_BOUND_CLASS);
+        assertThat(clazz, is((Object)TestAction.class));
+
+        Method method = ctx.getRequestScopedVar(MethodBinding.SCOPE_VAR_NAME_BOUND_METHOD);
+        Method nothingMethod = TestAction.class.getMethod("nothing");
+        assertThat(method, is(nothingMethod));
+    }
+
+    @Test
+    public void testBind_delegateObjectClassIsSetToScopeAsBoundClass() {
+        sut = new JaxRsMethodBinder("nothing", dummyHandlers);
+        HandlerWrapper<HttpRequest, Object> wrapper = sut.bind(new TestSubAction());
+        wrapper.handle(req, ctx);
+
+        Class<?> clazz = ctx.getRequestScopedVar(MethodBinding.SCOPE_VAR_NAME_BOUND_CLASS);
+        assertThat(clazz, is((Object)TestSubAction.class));
+    }
+
     /**
      * テスト用のActionクラス。
      */
@@ -340,7 +365,9 @@ public class JaxRsMethodBinderTest {
         public void interceptorTest() {
         }
     }
-    
+
+    private static class TestSubAction extends TestAction {}
+
     @Interceptor(TestInterceptor.Impl.class)
     @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.RUNTIME)

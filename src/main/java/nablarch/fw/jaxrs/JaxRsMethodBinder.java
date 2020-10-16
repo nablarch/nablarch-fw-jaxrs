@@ -211,6 +211,7 @@ public class JaxRsMethodBinder implements MethodBinder<HttpRequest, Object> {
             final Handler<HttpRequest, Object> handler = new Handler<HttpRequest, Object>() {
                 @Override
                 public Object handle(final HttpRequest req, final ExecutionContext ctx) {
+                    saveBoundClassAndMethodToRequestScope(ctx, delegate.getClass(), boundMethod);
                     return resourceMethod.invoke(delegate, req, ctx);
                 }
             };
