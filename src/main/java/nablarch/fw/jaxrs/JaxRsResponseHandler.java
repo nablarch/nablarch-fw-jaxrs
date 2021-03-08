@@ -119,7 +119,10 @@ public class JaxRsResponseHandler implements HttpRequestHandler {
         if (response.getContentLength() != null) {
             nativeResponse.setContentLength(Integer.parseInt(response.getContentLength()));
         }
-        nativeResponse.setContentType(response.getContentType());
+        String contentType = response.getContentType();
+        if (contentType != null) {
+            nativeResponse.setContentType(response.getContentType());
+        }
         for (Map.Entry<String, String> entry : response.getHeaderMap().entrySet()) {
             if (!entry.getKey().equals("Content-Length") && !entry.getKey().equals("Content-Type")) {
                 nativeResponse.setHeader(entry.getKey(), entry.getValue());

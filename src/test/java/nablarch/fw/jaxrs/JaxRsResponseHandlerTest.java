@@ -9,10 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletOutputStream;
@@ -20,10 +17,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
+import nablarch.common.web.WebConfig;
 import nablarch.core.message.ApplicationException;
 import nablarch.core.message.Message;
 import nablarch.core.message.MessageLevel;
 import nablarch.core.message.StringResource;
+import nablarch.core.repository.ObjectLoader;
+import nablarch.core.repository.SystemRepository;
 import nablarch.core.validation.ValidationResultMessage;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.Handler;
@@ -70,6 +70,7 @@ public class JaxRsResponseHandlerTest {
 
     @Before
     public void setUp() throws Exception {
+        SystemRepository.clear();
         OnMemoryLogWriter.clear();
         new Expectations() {{
             mockServletRequest.getContextPath();
@@ -125,6 +126,55 @@ public class JaxRsResponseHandlerTest {
         new Verifications() {{
             // servlet responseに201ステータスコードが設定されていること
             mockServletResponse.setStatus(201);
+        }};
+    }
+
+    /**
+     * ボディを持たないレスポンスでもContent-Typeを設定する場合のテスト。
+     * <p/>
+     * HttpResponse#getContentTypeは、システムリポジトリ中のWebConfigオブジェクトにフラグが設定されている場合は、
+     * ボディが空の状態でもContent-Typeが設定されていない場合にtext/plain;charset=UTF-8が設定されるようになっている。
+     * text/plain;charset=UTF-8が設定されること。
+     */
+    @Test
+    public void testStatusCodeOnlyResponseWithSetContentTypeForResponseWithNoBody() throws Exception {
+        // -------------------------------------------------- setup
+        context.addHandler(new Handler<Object, Object>() {
+            @Override
+            public Object handle(Object o, ExecutionContext context) {
+                return new HttpResponse(HttpResponse.Status.CREATED.getStatusCode());
+            }
+        });
+        new Expectations() {{
+            mockHttpRequest.getMethod();
+            result = "GET";
+            mockHttpRequest.getRequestUri();
+            result = "/api/user";
+        }};
+
+        final WebConfig webConfig = new WebConfig();
+        webConfig.setContentTypeForResponseWithNoBodyEnabled(true);
+        SystemRepository.load(new ObjectLoader() {
+            @Override
+            public Map<String, Object> load() {
+                final Map<String, Object> result = new HashMap<String, Object>();
+                result.put("webConfig", webConfig);
+                return result;
+            }
+        });
+
+        // -------------------------------------------------- execute
+        HttpResponse response = sut.handle(mockHttpRequest, context);
+
+        // -------------------------------------------------- assert
+        assertThat("201でボディが空のHttpResponseが戻される", response, isStatusCode(201).withEmptyBody());
+        assertThat("ServletOutputStreamに書き込まれたボティの長さも0であること",
+                getBodyString(), is(""));
+        new Verifications() {{
+            // servlet responseに201ステータスコードが設定されていること
+            mockServletResponse.setStatus(201);
+
+            mockServletResponse.setContentType("text/plain;charset=UTF-8");
         }};
     }
 
@@ -560,6 +610,8 @@ public class JaxRsResponseHandlerTest {
         new Verifications() {{
             // servlet responseに201ステータスコードが設定されていること
             mockServletResponse.setStatus(201);
+
+            mockServletResponse.setContentType(null); times=0;
         }};
     }
 

@@ -178,7 +178,7 @@ public class BodyConvertHandlerTest {
         assertThat(response, isStatusCode(505).withBody("TestForm:0")); // not counted up
         assertThat(testBodyConverter.readCount, is(0));
         assertThat(testBodyConverter.writeCount, is(1));
-        assertThat(response.getHeaderMap().size(), is(2));
+        assertThat(response.getHeaderMap().size(), is(3));
         assertThat(response.getHeader("test-name"), is("test-value"));
     }
 
@@ -259,7 +259,7 @@ public class BodyConvertHandlerTest {
         assertThat(response, isStatusCode(202).withBody("TestForm:0")); // not counted up
         assertThat(testBodyConverter.readCount, is(0));
         assertThat(testBodyConverter.writeCount, is(1));
-        assertThat(response.getHeaderMap().size(), is(1));
+        assertThat(response.getHeaderMap().size(), is(2));
     }
 
     /**
