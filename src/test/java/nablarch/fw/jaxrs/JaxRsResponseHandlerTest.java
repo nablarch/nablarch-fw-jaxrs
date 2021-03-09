@@ -153,7 +153,7 @@ public class JaxRsResponseHandlerTest {
         }};
 
         final WebConfig webConfig = new WebConfig();
-        webConfig.setContentTypeForResponseWithNoBodyEnabled(true);
+        webConfig.setAddDefaultContentTypeForNoBodyResponse(true);
         SystemRepository.load(new ObjectLoader() {
             @Override
             public Map<String, Object> load() {
