@@ -163,15 +163,6 @@ public class BasicCorsTest {
         assertThat(new BasicCors().isPreflightRequest(request, null), is(false));
     }
     @Test
-    public void isPreflightRequestForAccessControlRequestHeadersLessOK() {
-        new Expectations() {{
-            request.getMethod();                                 result = "OPTIONS";
-            request.getHeader("Origin");                         result = "OK";
-            request.getHeader("Access-Control-Request-Method");  result = "OK";
-        }};
-        assertThat(new BasicCors().isPreflightRequest(request, null), is(true));
-    }
-    @Test
     public void isPreflightRequestForAllOK() {
         new Expectations() {{
             request.getMethod();                                 result = "OPTIONS";
