@@ -168,7 +168,6 @@ public class BasicCorsTest {
             request.getMethod();                                 result = "OPTIONS";
             request.getHeader("Origin");                         result = "OK";
             request.getHeader("Access-Control-Request-Method");  result = "OK";
-            request.getHeader("Access-Control-Request-Headers"); result = null;
         }};
         assertThat(new BasicCors().isPreflightRequest(request, null), is(true));
     }
@@ -178,7 +177,6 @@ public class BasicCorsTest {
             request.getMethod();                                 result = "OPTIONS";
             request.getHeader("Origin");                         result = "OK";
             request.getHeader("Access-Control-Request-Method");  result = "OK";
-            request.getHeader("Access-Control-Request-Headers"); result = "OK";
         }};
         assertThat(new BasicCors().isPreflightRequest(request, null), is(true));
     }
