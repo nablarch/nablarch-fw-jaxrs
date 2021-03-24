@@ -29,8 +29,7 @@ public class BasicCors implements Cors {
     public boolean isPreflightRequest(HttpRequest request, ExecutionContext context) {
         return request.getMethod().equals("OPTIONS") &&
                 request.getHeader(Headers.ORIGIN) != null &&
-                request.getHeader(Headers.ACCESS_CONTROL_REQUEST_METHOD) != null &&
-                request.getHeader(Headers.ACCESS_CONTROL_REQUEST_HEADERS) != null;
+                request.getHeader(Headers.ACCESS_CONTROL_REQUEST_METHOD) != null;
     }
 
     @Override
