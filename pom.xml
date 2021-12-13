@@ -51,6 +51,13 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>java17</id>
+      <properties>
+        <!-- Arquillian のテストで使用する AP サーバー(glassfish)を動かすために必要 -->
+        <junit.additionalArgLine>--add-opens java.base/java.lang=ALL-UNNAMED</junit.additionalArgLine>
+      </properties>
+    </profile>
   </profiles>
 
   <dependencies>
