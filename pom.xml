@@ -153,7 +153,6 @@
     <dependency>
       <groupId>com.nablarch.integration</groupId>
       <artifactId>nablarch-jersey-adaptor</artifactId>
-      <version>LATEST</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
