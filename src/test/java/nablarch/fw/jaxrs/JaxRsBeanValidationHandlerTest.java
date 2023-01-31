@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.validation.MessageInterpolator;
-import javax.validation.Valid;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.Valid;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
 
 import nablarch.core.message.ApplicationException;
 import nablarch.core.message.Message;
@@ -152,7 +152,6 @@ public class JaxRsBeanValidationHandlerTest {
         JaxRsContext.set(context, jaxRsContext);
 
         // ---------------------------------------- execute
-        System.out.println(SystemRepository.get("messageInterpolator"));
         try {
             sut.handle(mockRequest, context);
             Assert.fail("とおらない");

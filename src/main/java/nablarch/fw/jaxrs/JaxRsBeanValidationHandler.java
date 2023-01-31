@@ -1,6 +1,6 @@
 package nablarch.fw.jaxrs;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import nablarch.core.message.ApplicationException;
 import nablarch.core.validation.ee.ValidatorUtil;
