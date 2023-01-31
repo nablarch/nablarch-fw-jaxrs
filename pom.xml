@@ -20,9 +20,28 @@
   </parent>
 
   <properties>
-    <!-- Arquillian のテストで使用する AP サーバー(glassfish)を動かすために必要 -->
-    <junit.additionalArgLine>--add-opens java.base/java.lang=ALL-UNNAMED</junit.additionalArgLine>
+    <wildfly.version>27.0.1.Final</wildfly.version>
+    <resteasy.version>6.2.2.Final</resteasy.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jboss.arquillian</groupId>
+        <artifactId>arquillian-bom</artifactId>
+        <version>1.7.0.Alpha13</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.shrinkwrap.resolver</groupId>
+        <artifactId>shrinkwrap-resolver-bom</artifactId>
+        <version>3.1.4</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
 
@@ -59,14 +78,40 @@
     <dependency>
       <groupId>org.jboss.arquillian.junit</groupId>
       <artifactId>arquillian-junit-container</artifactId>
-      <version>1.1.13.Final</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.jboss.arquillian.container</groupId>
-      <artifactId>arquillian-glassfish-embedded-3.1</artifactId>
-      <version>1.0.0.Final</version>
+      <groupId>org.wildfly.arquillian</groupId>
+      <artifactId>wildfly-arquillian-container-embedded</artifactId>
+      <version>5.0.0.Alpha6</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-client</artifactId>
+      <version>${resteasy.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-jackson2-provider</artifactId>
+      <version>${resteasy.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-jaxb-provider</artifactId>
+      <version>${resteasy.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.shrinkwrap.resolver</groupId>
+      <artifactId>shrinkwrap-resolver-impl-maven</artifactId>
       <scope>test</scope>
     </dependency>
 
@@ -136,14 +181,42 @@
 
   <build>
     <plugins>
+      <!-- Arquillian のテストで使用する WildFly をダウンロードする -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>process-test-classes</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.wildfly</groupId>
+                  <artifactId>wildfly-dist</artifactId>
+                  <version>${wildfly.version}</version>
+                  <type>zip</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>target</outputDirectory>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <excludes>
-            <!-- テストで使用しているAPサーバ（glassfish）が現状java11に対応していないため除外 -->
-            <exclude>nablarch.fw.jaxrs.integration.JaxRsIntegrationTest</exclude>
-          </excludes>
+          <systemPropertyVariables>
+            <jboss.home>${project.basedir}/target/wildfly-${wildfly.version}</jboss.home>
+            <module.path>${project.basedir}/target/wildfly-${wildfly.version}/modules</module.path>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
     </plugins>
