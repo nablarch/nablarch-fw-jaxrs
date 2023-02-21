@@ -5,7 +5,7 @@ import java.nio.charset.Charset;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.servlet.ServletRequest;
+import jakarta.servlet.ServletRequest;
 
 import nablarch.core.log.Logger;
 import nablarch.core.log.LoggerManager;

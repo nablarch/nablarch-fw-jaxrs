@@ -6,7 +6,7 @@ import nablarch.fw.web.HttpResponse;
 /**
  * Entityを持つレスポンス。
  *
- * {@link javax.ws.rs.Produces}を使用した場合に
+ * {@link jakarta.ws.rs.Produces}を使用した場合に
  * レスポンスヘッダとステータスコードを指定したい場合に使用する。
  *
  * @author Kiyohito Itoh

@@ -2,8 +2,8 @@ package nablarch.fw.jaxrs.integration.app;
 
 import java.util.Locale;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.core.MediaType;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.core.MediaType;
 
 import nablarch.core.message.ApplicationException;
 import nablarch.core.message.Message;

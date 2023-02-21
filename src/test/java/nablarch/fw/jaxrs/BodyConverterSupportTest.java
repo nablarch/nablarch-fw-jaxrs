@@ -177,7 +177,7 @@ public class BodyConverterSupportTest {
     }
 
     /**
-     * デフォルトのエンコーディングを変更した場合、{@link javax.servlet.ServletRequest#setCharacterEncoding(String)}に
+     * デフォルトのエンコーディングを変更した場合、{@link jakarta.servlet.ServletRequest#setCharacterEncoding(String)}に
      * そのエンコーディングが指定されて呼び出されること。
      */
     @Test

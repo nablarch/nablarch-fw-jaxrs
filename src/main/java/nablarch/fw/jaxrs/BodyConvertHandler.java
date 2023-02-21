@@ -153,7 +153,7 @@ public class BodyConvertHandler implements HttpRequestHandler {
      * </pre>
      *
      * @param contentType リクエストされたContent-Type
-     * @param consumesMediaType {@link javax.ws.rs.Consumes}アノテーションに指定されたメディアタイプ
+     * @param consumesMediaType {@link jakarta.ws.rs.Consumes}アノテーションに指定されたメディアタイプ
      * @return サポートしている場合は<code>true</code>
      */
     protected boolean supportsMediaType(final String contentType, final String consumesMediaType) {
