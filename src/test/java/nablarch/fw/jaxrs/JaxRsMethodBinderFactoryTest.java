@@ -1,19 +1,19 @@
 package nablarch.fw.jaxrs;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
-import mockit.Deencapsulation;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.Handler;
 import nablarch.fw.MethodBinder;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
+import nablarch.test.support.reflection.ReflectionUtil;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * {@link JaxRsMethodBinderFactory}のテストクラス。
@@ -38,7 +38,7 @@ public class JaxRsMethodBinderFactoryTest {
         assertThat(response.getBodyString(), is("ok"));
 
         // デフォルトで空のハンドラリストが設定されていることを確認する。
-        List<Handler<HttpRequest, ?>> handlerList = Deencapsulation.getField(methodBinder, "handlerList");
+        List<Handler<HttpRequest, ?>> handlerList = ReflectionUtil.getFieldValue(methodBinder, "handlerList");
         assertThat(handlerList.size(), is(0));
     }
 
@@ -58,7 +58,7 @@ public class JaxRsMethodBinderFactoryTest {
         assertThat(response.getBodyString(), is("ok"));
 
         // カスタムのハンドラリストが設定されていることを確認する。
-        List<Handler<HttpRequest, ?>> handlerList = Deencapsulation.getField(methodBinder, "handlerList");
+        List<Handler<HttpRequest, ?>> handlerList = ReflectionUtil.getFieldValue(methodBinder, "handlerList");
         assertThat(handlerList.size(), is(1));
         assertThat(handlerList.get(0), instanceOf(CustomHandler.class));
     }

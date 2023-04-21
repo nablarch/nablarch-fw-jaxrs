@@ -1,60 +1,57 @@
 package nablarch.fw.jaxrs;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.PropertyException;
 import jakarta.xml.bind.UnmarshalException;
 import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import org.hamcrest.CoreMatchers;
-
 import nablarch.fw.web.HttpErrorResponse;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
 import nablarch.fw.web.servlet.NablarchHttpServletRequestWrapper;
 import nablarch.fw.web.servlet.ServletExecutionContext;
 import nablarch.test.support.log.app.OnMemoryLogWriter;
-
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
-import mockit.Expectations;
-import mockit.Mocked;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link JaxbBodyConverter}のテストクラス。
  */
-@Ignore("jacoco と jmockit が競合してエラーになるため")
 public class JaxbBodyConverterTest {
 
     /** テスト対象 */
     JaxbBodyConverter sut = new JaxbBodyConverter();
 
-    @Mocked
-    public HttpRequest request;
+    public HttpRequest request = mock(HttpRequest.class);
 
-    @Mocked
-    public ServletExecutionContext executionContext;
+    public ServletExecutionContext executionContext = mock(ServletExecutionContext.class);
 
-    @Mocked
-    public JaxRsContext jaxRsContext;
+    private MockedStatic<JaxRsContext> jaxRsContextMockStatic;
+    public JaxRsContext jaxRsContext = mock(JaxRsContext.class);
 
-    @Mocked
-    protected NablarchHttpServletRequestWrapper servletRequest;
+    protected NablarchHttpServletRequestWrapper servletRequest = mock(NablarchHttpServletRequestWrapper.class);
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -62,11 +59,17 @@ public class JaxbBodyConverterTest {
     @Before
     public void setUp() throws Exception {
         OnMemoryLogWriter.clear();
+        
+        jaxRsContextMockStatic = Mockito.mockStatic(JaxRsContext.class);
+        jaxRsContextMockStatic.when(() -> JaxRsContext.get(executionContext)).thenReturn(jaxRsContext);
+        
+        when(executionContext.getServletRequest()).thenReturn(servletRequest);
     }
 
     @After
     public void tearDown() {
         OnMemoryLogWriter.clear();
+        jaxRsContextMockStatic.close();
     }
 
     /**
@@ -84,17 +87,11 @@ public class JaxbBodyConverterTest {
                 + "  <name>山田太郎</name>"
                 + "</person>";
 
-        new Expectations() {{
-            jaxRsContext.getRequestClass();
-            result = Person.class;
-            minTimes = 0;
-            jaxRsContext.getConsumesMediaType();
-            result = "application/xml";
-            minTimes = 0;
-            servletRequest.getReader();
-            result = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(xml.getBytes("utf-8")), "utf-8"));
-            minTimes = 0;
-        }};
+        doReturn(Person.class).when(jaxRsContext).getRequestClass();
+        when(jaxRsContext.getConsumesMediaType()).thenReturn("application/xml");
+        when(servletRequest.getReader())
+                .thenReturn(new BufferedReader(new InputStreamReader(
+                        new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)));
 
         Person person = (Person) sut.read(request, executionContext);
 
@@ -112,20 +109,12 @@ public class JaxbBodyConverterTest {
 
         final String xml = "<?xml version=\"1.0\"?><person><age>34</age><name>山田花子</name></person>";
 
-        new Expectations() {{
-            jaxRsContext.getRequestClass();
-            result = Person.class;
-            minTimes = 0;
-            jaxRsContext.getConsumesMediaType();
-            result = "application/xml";
-            minTimes = 0;
-            servletRequest.getCharacterEncoding();
-            result = "windows-31j";
-            minTimes = 0;
-            servletRequest.getReader();
-            result = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(xml.getBytes("windows-31j")), "windows-31j"));
-            minTimes = 0;
-        }};
+        doReturn(Person.class).when(jaxRsContext).getRequestClass();
+        when(jaxRsContext.getConsumesMediaType()).thenReturn("application/xml");
+        when(servletRequest.getCharacterEncoding()).thenReturn("windows-31j");
+        when(servletRequest.getReader())
+                .thenReturn(new BufferedReader(new InputStreamReader(
+                        new ByteArrayInputStream(xml.getBytes("windows-31j")), "windows-31j")));
 
         Person person = (Person) sut.read(request, executionContext);
 
@@ -140,14 +129,11 @@ public class JaxbBodyConverterTest {
      */
     @Test
     public void test_read_failed() throws Exception {
-        new Expectations() {{
-            jaxRsContext.getRequestClass();
-            result = Person.class;
-            jaxRsContext.getConsumesMediaType();
-            result = "application/xml";
-            servletRequest.getReader();
-            result = new BufferedReader(new InputStreamReader(new ByteArrayInputStream("failed.".getBytes("utf-8")), "utf-8"));
-        }};
+        doReturn(Person.class).when(jaxRsContext).getRequestClass();
+        when(jaxRsContext.getConsumesMediaType()).thenReturn("application/xml");
+        when(servletRequest.getReader())
+                .thenReturn(new BufferedReader(new InputStreamReader(
+                        new ByteArrayInputStream("failed.".getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)));
 
         try {
             sut.read(request, executionContext);
@@ -157,17 +143,9 @@ public class JaxbBodyConverterTest {
             assertThat(e.getCause(), instanceOf(UnmarshalException.class));
         }
 
-        new Expectations() {{
-            jaxRsContext.getRequestClass();
-            result = Person.class;
-            minTimes = 0;
-            jaxRsContext.getConsumesMediaType();
-            result = "application/xml";
-            minTimes = 0;
-            servletRequest.getReader();
-            result = new IOException();
-            minTimes = 0;
-        }};
+        doReturn(Person.class).when(jaxRsContext).getRequestClass();
+        when(jaxRsContext.getConsumesMediaType()).thenReturn("application/xml");
+        when(servletRequest.getReader()).thenThrow(new IOException());
 
         try {
             sut.read(request, executionContext);
@@ -203,14 +181,11 @@ public class JaxbBodyConverterTest {
                         + "  <name>山田太郎</name>"
                         + "</person>";
 
-        new Expectations() {{
-            jaxRsContext.getRequestClass();
-            result = Person.class;
-            jaxRsContext.getConsumesMediaType();
-            result = "application/xml";
-            servletRequest.getReader();
-            result = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(xml.getBytes("utf-8")), "utf-8"));
-        }};
+        doReturn(Person.class).when(jaxRsContext).getRequestClass();
+        when(jaxRsContext.getConsumesMediaType()).thenReturn("application/xml");
+        when(servletRequest.getReader())
+                .thenReturn(new BufferedReader(new InputStreamReader(
+                        new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8)));
 
         JaxbBodyConverter sut = new JaxbBodyConverter() {
             @Override
@@ -230,10 +205,7 @@ public class JaxbBodyConverterTest {
     @Test
     public void test_write() throws Exception {
 
-        new Expectations() {{
-            jaxRsContext.getProducesMediaType();
-            result = "application/xml;charset=utf-8";
-        }};
+        when(jaxRsContext.getProducesMediaType()).thenReturn("application/xml;charset=utf-8");
 
         HttpResponse response = sut.write(new Person(12, "山田太郎"), executionContext);
 
@@ -258,10 +230,7 @@ public class JaxbBodyConverterTest {
     @Test
     public void test_write_windows31j() throws Exception {
 
-        new Expectations() {{
-            jaxRsContext.getProducesMediaType();
-            result = "application/xml;charset=windows-31j";
-        }};
+        when(jaxRsContext.getProducesMediaType()).thenReturn("application/xml;charset=windows-31j");
 
         HttpResponse response = sut.write(new Person(34, "山田花子"), executionContext);
 
@@ -290,10 +259,7 @@ public class JaxbBodyConverterTest {
         expectedException.expectMessage(is("failed to write response."));
         expectedException.expectCause(CoreMatchers.<Throwable>instanceOf(JAXBException.class));
 
-        new Expectations() {{
-            jaxRsContext.getProducesMediaType();
-            result = "application/xml;charset=windows-31j";
-        }};
+        when(jaxRsContext.getProducesMediaType()).thenReturn("application/xml;charset=windows-31j");
 
         sut.write("test", executionContext);
     }
@@ -308,10 +274,7 @@ public class JaxbBodyConverterTest {
     @Test
     public void test_write_configure_success() throws Exception {
 
-        new Expectations() {{
-            jaxRsContext.getProducesMediaType();
-            result = "application/xml";
-        }};
+        when(jaxRsContext.getProducesMediaType()).thenReturn("application/xml");
 
         JaxbBodyConverter sut = new JaxbBodyConverter() {
             @Override
@@ -343,10 +306,7 @@ public class JaxbBodyConverterTest {
         expectedException.expectMessage(is("failed to configure Marshaller."));
         expectedException.expectCause(CoreMatchers.<Throwable>instanceOf(PropertyException.class));
 
-        new Expectations() {{
-            jaxRsContext.getProducesMediaType();
-            result = "application/xml";
-        }};
+        when(jaxRsContext.getProducesMediaType()).thenReturn("application/xml");
 
         JaxbBodyConverter sut = new JaxbBodyConverter() {
             @Override

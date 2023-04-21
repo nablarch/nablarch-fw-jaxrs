@@ -1,14 +1,5 @@
 package nablarch.fw.jaxrs;
 
-import static nablarch.fw.jaxrs.HttpResponseMatcher.isStatusCode;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
-import java.nio.charset.UnsupportedCharsetException;
-
-import org.hamcrest.CoreMatchers;
-
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpErrorResponse;
 import nablarch.fw.web.HttpRequest;
@@ -16,22 +7,30 @@ import nablarch.fw.web.HttpResponse;
 import nablarch.fw.web.servlet.NablarchHttpServletRequestWrapper;
 import nablarch.fw.web.servlet.ServletExecutionContext;
 import nablarch.test.support.log.app.OnMemoryLogWriter;
-
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.mockito.MockedStatic;
 
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
+import java.nio.charset.UnsupportedCharsetException;
+
+import static nablarch.fw.jaxrs.HttpResponseMatcher.isStatusCode;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link BodyConverterSupport}のテストクラス。
  */
-@Ignore("jacoco と jmockit が競合してエラーになるため")
 public class BodyConverterSupportTest {
 
     /**
@@ -60,26 +59,29 @@ public class BodyConverterSupportTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    @Mocked
-    private HttpRequest mockRequest;
+    private final HttpRequest mockRequest = mock(HttpRequest.class);
 
-    @Mocked
-    private NablarchHttpServletRequestWrapper mockServletRequest;
+    private final NablarchHttpServletRequestWrapper mockServletRequest = mock(NablarchHttpServletRequestWrapper.class);
 
-    @Mocked
-    private ServletExecutionContext mockContext;
+    private final ServletExecutionContext mockContext = mock(ServletExecutionContext.class);
 
-    @Mocked
-    private JaxRsContext mockJaxRsContext;
+    private final JaxRsContext mockJaxRsContext = mock(JaxRsContext.class);
+    
+    private MockedStatic<JaxRsContext> jaxRsContextMockStatic;
 
     @Before
     public void setUp() throws Exception {
         OnMemoryLogWriter.clear();
+        jaxRsContextMockStatic = mockStatic(JaxRsContext.class);
+        jaxRsContextMockStatic.when(() -> JaxRsContext.get(mockContext)).thenReturn(mockJaxRsContext);
+        
+        when(mockContext.getServletRequest()).thenReturn(mockServletRequest);
     }
 
     @After
     public void tearDown() {
         OnMemoryLogWriter.clear();
+        jaxRsContextMockStatic.close();
     }
 
     /**
@@ -87,23 +89,14 @@ public class BodyConverterSupportTest {
      */
     @Test
     public void readSuccess_shouldReturnObjectConvertedInImplementationClass() throws Exception {
-        new Expectations() {{
-            mockJaxRsContext.getRequestClass();
-            result = TestBean.class;
-            minTimes = 0;
-            mockJaxRsContext.getConsumesMediaType();
-            result = "application/json";
-            minTimes = 0;
-        }};
+        doReturn(TestBean.class).when(mockJaxRsContext).getRequestClass();
+        when(mockJaxRsContext.getConsumesMediaType()).thenReturn("application/json");
 
         String result = (String) sut.read(mockRequest, mockContext);
         assertThat(result, is("read object"));
 
         // デフォルトのcharsetが ServletRequest
-        new Verifications() {{
-            mockServletRequest.setCharacterEncoding("UTF-8");
-            times = 1;
-        }};
+        verify(mockServletRequest).setCharacterEncoding("UTF-8");
     }
 
     /**
@@ -114,10 +107,7 @@ public class BodyConverterSupportTest {
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage("consumes media type and resource method signature is mismatch.");
 
-        new Expectations() {{
-            mockJaxRsContext.getRequestClass();
-            result = null;
-        }};
+        when(mockJaxRsContext.getRequestClass()).thenReturn(null);
         sut.read(mockRequest, mockContext);
     }
 
@@ -126,17 +116,10 @@ public class BodyConverterSupportTest {
      */
     @Test
     public void unsupportedCharset_shouldThrowException() throws Exception {
-            new Expectations() {{
-                mockJaxRsContext.getRequestClass();
-                result = TestBean.class;
-                minTimes = 0;
-                mockJaxRsContext.getConsumesMediaType();
-                result = "application/json";
-                minTimes = 0;
-                mockServletRequest.getCharacterEncoding();
-                result = "test";
-                minTimes = 0;
-            }};
+        doReturn(TestBean.class).when(mockJaxRsContext).getRequestClass();
+        when(mockJaxRsContext.getConsumesMediaType()).thenReturn("application/json");
+        when(mockServletRequest.getCharacterEncoding()).thenReturn("test");
+        
         try {
             sut.read(mockRequest, mockContext);
             fail("例外がスローされるはず");
@@ -153,11 +136,7 @@ public class BodyConverterSupportTest {
      */
     @Test
     public void writeSuccess_shouldReturnObjectConvertedInImplementationClass() throws Exception {
-        new Expectations() {{
-            mockJaxRsContext.getProducesMediaType();
-            result = "application/json";
-            minTimes = 0;
-        }};
+        when(mockJaxRsContext.getProducesMediaType()).thenReturn("application/json");
 
         HttpResponse response = sut.write("response object", mockContext);
         assertThat(response, isStatusCode(200).withBody("response object"));
@@ -170,10 +149,7 @@ public class BodyConverterSupportTest {
     public void specifiesHttpResponseToWriteMethod_shouldThrowException() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
         expectedException.expectMessage("produces media type and resource method signature is mismatch.");
-        new Expectations() {{
-            mockJaxRsContext.getProducesMediaType();
-            result = "application/json";
-        }};
+        when(mockJaxRsContext.getProducesMediaType()).thenReturn("application/json");
 
         sut.write(new HttpResponse(), mockContext);
     }
@@ -184,24 +160,15 @@ public class BodyConverterSupportTest {
      */
     @Test
     public void changeCharset_shouldChangeCharsetOfServletRequest() throws Exception {
-        new Expectations() {{
-            mockJaxRsContext.getConsumesMediaType();
-            result = "application/json";
-            minTimes = 0;
-            mockJaxRsContext.getRequestClass();
-            result = TestBean.class;
-            minTimes = 0;
-        }};
+        when(mockJaxRsContext.getConsumesMediaType()).thenReturn("application/json");
+        doReturn(TestBean.class).when(mockJaxRsContext).getRequestClass();
 
         sut.setDefaultEncoding("Windows-31j");
 
         String result = (String) sut.read(mockRequest, mockContext);
         assertThat(result, is("read object"));
 
-        new Verifications() {{
-            mockServletRequest.setCharacterEncoding("windows-31j");
-            times = 1;
-        }};
+        verify(mockServletRequest).setCharacterEncoding("windows-31j");
     }
 
     /**

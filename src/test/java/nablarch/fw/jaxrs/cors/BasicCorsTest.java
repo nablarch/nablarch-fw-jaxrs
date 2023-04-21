@@ -1,23 +1,23 @@
 package nablarch.fw.jaxrs.cors;
 
-import mockit.Expectations;
-import mockit.Mocked;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
 import org.junit.Test;
 
 import java.util.Arrays;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link BasicCors}のテスト。
  */
 public class BasicCorsTest {
 
-    @Mocked
-    private HttpRequest request;
+    private final HttpRequest request = mock(HttpRequest.class);
 
     /**
      * リソースへのアクセスを許可するオリジンが設定されていない場合は、
@@ -25,15 +25,9 @@ public class BasicCorsTest {
      */
     @Test
     public void requiredSetting() {
-
-        new Expectations() {{
-            request.getHeader("Origin");
-            result = "https://foo.example";
-            request.getHeader("Access-Control-Request-Method");
-            result = "POST";
-            request.getHeader("Access-Control-Request-Headers");
-            result = "TEST";
-        }};
+        when(request.getHeader("Origin")).thenReturn("https://foo.example");
+        when(request.getHeader("Access-Control-Request-Method")).thenReturn("POST");
+        when(request.getHeader("Access-Control-Request-Headers")).thenReturn("TEST");
 
         BasicCors sut = new BasicCors();
         try {
@@ -48,16 +42,10 @@ public class BasicCorsTest {
      */
     @Test
     public void defaultSettings() {
-
-        new Expectations() {{
-            request.getHeader("Origin");
-            result = "https://foo.example";
-            request.getHeader("Access-Control-Request-Method");
-            result = "POST";
-            request.getHeader("Access-Control-Request-Headers");
-            result = "TEST";
-        }};
-
+        when(request.getHeader("Origin")).thenReturn("https://foo.example");
+        when(request.getHeader("Access-Control-Request-Method")).thenReturn("POST");
+        when(request.getHeader("Access-Control-Request-Headers")).thenReturn("TEST");
+        
         BasicCors sut = new BasicCors();
         sut.setAllowOrigins(Arrays.asList("https://foo.example"));
         HttpResponse response = sut.createPreflightResponse(request, null);
@@ -78,14 +66,9 @@ public class BasicCorsTest {
      */
     @Test
     public void customSettings() {
-        new Expectations() {{
-            request.getHeader("Origin");
-            result = "https://foo.example";
-            request.getHeader("Access-Control-Request-Method");
-            result = "POST";
-            request.getHeader("Access-Control-Request-Headers");
-            result = "TEST";
-        }};
+        when(request.getHeader("Origin")).thenReturn("https://foo.example");
+        when(request.getHeader("Access-Control-Request-Method")).thenReturn("POST");
+        when(request.getHeader("Access-Control-Request-Headers")).thenReturn("TEST");
 
         BasicCors sut = new BasicCors();
         sut.setAllowOrigins(Arrays.asList("https://foo.example"));
@@ -111,14 +94,9 @@ public class BasicCorsTest {
     @Test
     public void requestsFromDisallowedOrigin() {
 
-        new Expectations() {{
-            request.getHeader("Origin");
-            result = "https://bar.example";
-            request.getHeader("Access-Control-Request-Method");
-            result = "POST";
-            request.getHeader("Access-Control-Request-Headers");
-            result = "TEST";
-        }};
+        when(request.getHeader("Origin")).thenReturn("https://bar.example");
+        when(request.getHeader("Access-Control-Request-Method")).thenReturn("POST");
+        when(request.getHeader("Access-Control-Request-Headers")).thenReturn("TEST");
 
         BasicCors sut = new BasicCors();
         sut.setAllowOrigins(Arrays.asList("https://foo.example"));
@@ -140,35 +118,27 @@ public class BasicCorsTest {
      */
     @Test
     public void isPreflightRequestForMethodNG() {
-        new Expectations() {{
-            request.getMethod();                                 result = "GET";
-        }};
+        when(request.getMethod()).thenReturn("GET");
         assertThat(new BasicCors().isPreflightRequest(request, null), is(false));
     }
     @Test
     public void isPreflightRequestForOriginNG() {
-        new Expectations() {{
-            request.getMethod();                                 result = "OPTIONS";
-            request.getHeader("Origin");                         result = null;
-        }};
+        when(request.getMethod()).thenReturn("OPTIONS");
+        when(request.getHeader("Origin")).thenReturn(null);
         assertThat(new BasicCors().isPreflightRequest(request, null), is(false));
     }
     @Test
     public void isPreflightRequestForAccessControlRequestMethodNG() {
-        new Expectations() {{
-            request.getMethod();                                 result = "OPTIONS";
-            request.getHeader("Origin");                         result = "OK";
-            request.getHeader("Access-Control-Request-Method");  result = null;
-        }};
+        when(request.getMethod()).thenReturn("OPTIONS");
+        when(request.getHeader("Origin")).thenReturn("OK");
+        when(request.getHeader("Access-Control-Request-Method")).thenReturn(null);
         assertThat(new BasicCors().isPreflightRequest(request, null), is(false));
     }
     @Test
     public void isPreflightRequestForAllOK() {
-        new Expectations() {{
-            request.getMethod();                                 result = "OPTIONS";
-            request.getHeader("Origin");                         result = "OK";
-            request.getHeader("Access-Control-Request-Method");  result = "OK";
-        }};
+        when(request.getMethod()).thenReturn("OPTIONS");
+        when(request.getHeader("Origin")).thenReturn("OK");
+        when(request.getHeader("Access-Control-Request-Method")).thenReturn("OK");
         assertThat(new BasicCors().isPreflightRequest(request, null), is(true));
     }
 }

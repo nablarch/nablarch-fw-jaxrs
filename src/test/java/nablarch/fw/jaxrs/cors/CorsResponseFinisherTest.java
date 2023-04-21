@@ -1,19 +1,19 @@
 package nablarch.fw.jaxrs.cors;
 
-import mockit.Mocked;
-import mockit.Verifications;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
 import org.junit.Test;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * {@link CorsResponseFinisher}のテスト。
  */
 public class CorsResponseFinisherTest {
 
-    @Mocked
-    private Cors cors;
+    private final Cors cors = mock(Cors.class);
 
     /**
      * CORSに処理を委譲していることを確認。
@@ -29,9 +29,6 @@ public class CorsResponseFinisherTest {
         sut.setCors(cors);
         sut.finish(request, response, context);
 
-        new Verifications() {{
-            cors.postProcess(request, response, context);
-            times=1;
-        }};
+        verify(cors).postProcess(request, response, context);
     }
 }
