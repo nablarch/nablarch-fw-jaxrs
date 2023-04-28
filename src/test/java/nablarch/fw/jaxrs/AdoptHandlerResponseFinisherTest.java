@@ -1,10 +1,8 @@
 package nablarch.fw.jaxrs;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-
-import mockit.Expectations;
-import mockit.Mocked;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
@@ -15,34 +13,30 @@ import nablarch.fw.web.handler.secure.XssProtectionHeader;
 import nablarch.fw.web.servlet.ServletExecutionContext;
 import org.junit.Test;
 
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
+
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link AdoptHandlerResponseFinisher}のテスト。
  */
 public class AdoptHandlerResponseFinisherTest {
 
-    @Mocked
-    private HttpServletRequest mockServletRequest;
+    private final HttpServletRequest mockServletRequest = mock(HttpServletRequest.class, RETURNS_DEEP_STUBS);
 
-    @Mocked
-    private HttpServletResponse mockServletResponse;
+    private final HttpServletResponse mockServletResponse = mock(HttpServletResponse.class);
 
-    @Mocked
-    private ServletContext mockServletContext;
+    private final ServletContext mockServletContext = mock(ServletContext.class);
 
     @Test
     public void testSecureHandler() {
 
-        new Expectations() {{
-            mockServletRequest.getContextPath();
-            result = "dummy";
-            mockServletRequest.getRequestURI();
-            result = "dummy/test";
-        }};
+        when(mockServletRequest.getContextPath()).thenReturn("dummy");
+        when(mockServletRequest.getRequestURI()).thenReturn("dummy/test");
 
         SecureHandler handler = new SecureHandler();
         handler.setSecureResponseHeaderList(Arrays.asList(

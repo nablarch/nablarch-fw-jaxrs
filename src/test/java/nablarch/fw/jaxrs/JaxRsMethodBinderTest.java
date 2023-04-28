@@ -1,10 +1,18 @@
 package nablarch.fw.jaxrs;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import nablarch.fw.ExecutionContext;
+import nablarch.fw.Handler;
+import nablarch.fw.HandlerWrapper;
+import nablarch.fw.Interceptor;
+import nablarch.fw.handler.MethodBinding;
+import nablarch.fw.web.HttpErrorResponse;
+import nablarch.fw.web.HttpRequest;
+import nablarch.fw.web.HttpResponse;
+import org.hamcrest.Description;
+import org.hamcrest.TypeSafeMatcher;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -15,24 +23,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hamcrest.Description;
-import org.hamcrest.TypeSafeMatcher;
-
-import nablarch.fw.ExecutionContext;
-import nablarch.fw.Handler;
-import nablarch.fw.HandlerWrapper;
-import nablarch.fw.Interceptor;
-import nablarch.fw.handler.MethodBinding;
-import nablarch.fw.web.HttpErrorResponse;
-import nablarch.fw.web.HttpRequest;
-import nablarch.fw.web.HttpResponse;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
-import mockit.Expectations;
-import mockit.Mocked;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link JaxRsMethodBinder}のテストクラス。
@@ -45,8 +42,7 @@ public class JaxRsMethodBinderTest {
     /** テスト対象 */
     JaxRsMethodBinder sut;
 
-    @Mocked
-    public HttpRequest req;
+    public final HttpRequest req = mock(HttpRequest.class);
 
     public ExecutionContext ctx = new ExecutionContext();
 
@@ -164,10 +160,7 @@ public class JaxRsMethodBinderTest {
             }
         });
 
-        new Expectations() {{
-            req.getRequestUri();
-            result = "/test";
-        }};
+        when(req.getRequestUri()).thenReturn("/test");
 
         sut = new JaxRsMethodBinder("test", dummyHandlers);
         HandlerWrapper<HttpRequest, Object> wrapper = sut.bind(new TestAction());

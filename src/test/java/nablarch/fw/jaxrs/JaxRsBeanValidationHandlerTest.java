@@ -1,23 +1,11 @@
 package nablarch.fw.jaxrs;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
 import jakarta.validation.MessageInterpolator;
 import jakarta.validation.Valid;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
-
 import nablarch.core.message.ApplicationException;
 import nablarch.core.message.Message;
-import nablarch.core.repository.SystemRepository;
 import nablarch.core.validation.ValidationResultMessage;
 import nablarch.core.validation.ee.Digits;
 import nablarch.core.validation.ee.Domain;
@@ -30,12 +18,20 @@ import nablarch.fw.ExecutionContext;
 import nablarch.fw.Handler;
 import nablarch.fw.web.HttpRequest;
 import nablarch.test.support.SystemRepositoryResource;
-
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import mockit.Injectable;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * {@link JaxRsBeanValidationHandler}のテストクラス。
@@ -46,8 +42,7 @@ public class JaxRsBeanValidationHandlerTest {
     private final JaxRsBeanValidationHandler sut = new JaxRsBeanValidationHandler();
 
     /** mock http request */
-    @Injectable
-    private HttpRequest mockRequest;
+    private final HttpRequest mockRequest = mock(HttpRequest.class);
 
     @ClassRule
     public static SystemRepositoryResource resource = new SystemRepositoryResource(
