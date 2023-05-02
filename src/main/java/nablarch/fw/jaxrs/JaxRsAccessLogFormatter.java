@@ -8,13 +8,11 @@ import nablarch.core.log.LogUtil;
 import nablarch.core.log.Logger;
 import nablarch.core.log.LoggerManager;
 import nablarch.core.log.MaskingMapItemSupport;
-import nablarch.core.log.app.AppLogUtil;
 import nablarch.core.util.ObjectUtil;
 import nablarch.core.util.StringUtil;
 import nablarch.core.util.annotation.Published;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
-import nablarch.fw.web.handler.HttpResponseUtil;
 import nablarch.fw.web.servlet.NablarchHttpServletRequestWrapper;
 import nablarch.fw.web.servlet.ServletExecutionContext;
 
@@ -209,7 +207,6 @@ public class JaxRsAccessLogFormatter {
         logItems.put("$sessionId$", new SessionIdItem());
         logItems.put("$sessionStoreId$", new SessionStoreIdItem());
         logItems.put("$statusCode$", new StatusCodeItem());
-        logItems.put("$responseStatusCode$", new ResponseStatusCodeItem());
         logItems.put("$clientIpAddress$", new ClientIpAddressItem());
         logItems.put("$clientHost$", new ClientHostItem());
         logItems.put("$clientUserAgent$", new ClientUserAgentItem());
@@ -839,22 +836,6 @@ public class JaxRsAccessLogFormatter {
          */
         public String get(JaxRsAccessLogContext context) {
             int statusCode = context.getStatusCode();
-            return statusCode != -1 ? String.valueOf(statusCode) : "";
-        }
-    }
-
-    /**
-     * クライアントへのレスポンスに使用するステータスコードを取得するクラス。
-     */
-    public static class ResponseStatusCodeItem implements LogItem<JaxRsAccessLogContext> {
-
-        /**
-         * ステータスコードを取得する。
-         * @param context JaxRsAccessLogContext
-         * @return ステータスコード
-         */
-        public String get(JaxRsAccessLogContext context) {
-            int statusCode = HttpResponseUtil.chooseResponseStatusCode(context.getResponse(), context.getContext());
             return statusCode != -1 ? String.valueOf(statusCode) : "";
         }
     }
