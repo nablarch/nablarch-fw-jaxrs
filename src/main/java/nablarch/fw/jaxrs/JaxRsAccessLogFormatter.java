@@ -53,7 +53,7 @@ public class JaxRsAccessLogFormatter {
 
     /** デフォルトのリクエスト処理終了時のフォーマット */
     private static final String DEFAULT_END_FORMAT = "@@@@ END @@@@ rid = [$requestId$] uid = [$userId$] sid = [$sessionId$]"
-            + " url = [$url$] status_code = [$statusCode$] content_path = [$contentPath$]"
+            + " url = [$url$] status_code = [$statusCode$]"
             + "\n\tstart_time     = [$startTime$]"
             + "\n\tend_time       = [$endTime$]"
             + "\n\texecution_time = [$executionTime$]"
