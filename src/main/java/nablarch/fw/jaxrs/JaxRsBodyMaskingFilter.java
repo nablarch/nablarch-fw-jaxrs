@@ -20,7 +20,7 @@ public class JaxRsBodyMaskingFilter implements LogContentMaskingFilter {
     /** マスク文字 */
     private String maskingString;
 
-    /** マスク対象のパターン */
+    /** マスク対象のJSON文字列パターン */
     private List<Pattern> maskingJsonPatterns;
 
     @Override
