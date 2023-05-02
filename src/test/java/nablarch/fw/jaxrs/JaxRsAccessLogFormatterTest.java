@@ -161,7 +161,7 @@ public class JaxRsAccessLogFormatterTest {
             sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$requestId$]").build());
             ThreadContext.setRequestId("test");
 
-            String actual = sut.formatBegin(new JaxRsAccessLogContext());
+            String actual = sut.formatBegin(logContext);
 
             assertThat(actual, is("[test]"));
         }
@@ -174,7 +174,7 @@ public class JaxRsAccessLogFormatterTest {
             sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$requestId$]").build());
             ThreadContext.setRequestId("test");
 
-            String actual = sut.formatEnd(new JaxRsAccessLogContext());
+            String actual = sut.formatEnd(logContext);
 
             assertThat(actual, is("[test]"));
         }
@@ -186,7 +186,7 @@ public class JaxRsAccessLogFormatterTest {
         public void testFormatRequestIdIfUndefined() {
             sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$requestId$]").build());
 
-            String actual = sut.formatBegin(new JaxRsAccessLogContext());
+            String actual = sut.formatBegin(logContext);
 
             assertThat(actual, is("[null]"));
         }
@@ -199,7 +199,7 @@ public class JaxRsAccessLogFormatterTest {
             sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$userId$]").build());
             ThreadContext.setUserId("test");
 
-            String actual = sut.formatBegin(new JaxRsAccessLogContext());
+            String actual = sut.formatBegin(logContext);
 
             assertThat(actual, is("[test]"));
         }
@@ -212,7 +212,7 @@ public class JaxRsAccessLogFormatterTest {
             sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$userId$]").build());
             ThreadContext.setUserId("test");
 
-            String actual = sut.formatEnd(new JaxRsAccessLogContext());
+            String actual = sut.formatEnd(logContext);
 
             assertThat(actual, is("[test]"));
         }
@@ -224,7 +224,7 @@ public class JaxRsAccessLogFormatterTest {
         public void testFormatUserIdIfUndefined() {
             sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$userId$]").build());
 
-            String actual = sut.formatBegin(new JaxRsAccessLogContext());
+            String actual = sut.formatBegin(logContext);
 
             assertThat(actual, is("[null]"));
         }
@@ -334,7 +334,7 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
-         * リクエスト処理開始時のメッセージにセッションIDを出力できる。
+         * リクエスト処理開始時のメッセージにHTTPセッションIDを出力できる。
          */
         @Test
         public void testBeginFormatSessionId() {
@@ -349,7 +349,7 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
-         * リクエスト処理終了時のメッセージにセッションIDを出力できる。
+         * リクエスト処理終了時のメッセージにHTTPセッションIDを出力できる。
          */
         @Test
         public void testEndFormatSessionId() {
@@ -364,7 +364,7 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
-         * リクエスト処理開始時のメッセージにセッションIDを出力できる。
+         * リクエスト処理開始時のメッセージにセッションストアIDを出力できる。
          */
         @Test
         public void testBeginFormatSessionStoreId() {
@@ -377,7 +377,7 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
-         * リクエスト処理終了時のメッセージにセッションIDを出力できる。
+         * リクエスト処理終了時のメッセージにセッションストアIDを出力できる。
          */
         @Test
         public void testEndFormatSessionStoreId() {
