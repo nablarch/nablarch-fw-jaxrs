@@ -148,7 +148,7 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
      * @param props 各種ログ出力の設定情報
      */
     @Override
-    protected void initialize(Map<String, String> props) {
+    public void initialize(Map<String, String> props) {
         initializeEnabled(props);
 
         JsonSerializationSettings settings = new JsonSerializationSettings(props, PROPS_PREFIX, AppLogUtil.getFilePath());

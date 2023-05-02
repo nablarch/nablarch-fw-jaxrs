@@ -135,17 +135,11 @@ public class JaxRsAccessLogFormatter {
     private LogItem<JaxRsAccessLogContext>[] endLogItems;
 
     /**
-     * フォーマット済みのログ出力項目を初期化する。
-     */
-    public JaxRsAccessLogFormatter() {
-        initialize(AppLogUtil.getProps());
-    }
-
-    /**
-     * 初期化。
+     * 初期化する。
+     *
      * @param props 各種ログ出力の設定情報
      */
-    protected void initialize(Map<String, String> props) {
+    public void initialize(Map<String, String> props) {
         initializeEnabled(props);
         initializeLogItems(props);
     }

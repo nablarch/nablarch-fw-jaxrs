@@ -32,7 +32,9 @@ public class JaxRsAccessLogHandler implements Handler<HttpRequest, HttpResponse>
      * コンストラクタ。
      */
     public JaxRsAccessLogHandler() {
-        logFormatter = createLogFormatter();
+        Map<String, String> props = AppLogUtil.getProps();
+        logFormatter = createLogFormatter(props);
+        logFormatter.initialize(props);
     }
 
     /**
@@ -77,8 +79,7 @@ public class JaxRsAccessLogHandler implements Handler<HttpRequest, HttpResponse>
      *
      * @return {@link JaxRsAccessLogFormatter}
      */
-    protected JaxRsAccessLogFormatter createLogFormatter() {
-        Map<String, String> props = AppLogUtil.getProps();
+    protected JaxRsAccessLogFormatter createLogFormatter(Map<String, String> props) {
         String className = props.get(JaxRsAccessLogFormatter.PROPS_PREFIX + "className");
         if (className == null || className.isEmpty()) {
             return new JaxRsAccessLogFormatter();
