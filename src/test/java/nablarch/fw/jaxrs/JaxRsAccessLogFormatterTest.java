@@ -730,8 +730,8 @@ public class JaxRsAccessLogFormatterTest {
         public void testEndFormatStartTime() {
             sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$startTime$]")
                     .datePattern("yyyy/MM/dd").build());
-            long time = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
-            logContext.setStartTime(time);
+            long startTime = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
+            logContext.setStartTime(startTime);
 
             String actual = sut.formatEnd(logContext);
 
@@ -744,8 +744,8 @@ public class JaxRsAccessLogFormatterTest {
         @Test
         public void testEndFormatStartTimeWithDefaultFormat() {
             sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$startTime$]").build());
-            long time = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
-            logContext.setStartTime(time);
+            long startTime = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
+            logContext.setStartTime(startTime);
 
             String actual = sut.formatEnd(logContext);
 
@@ -759,8 +759,8 @@ public class JaxRsAccessLogFormatterTest {
         public void testEndFormatEndTime() {
             sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$endTime$]")
                     .datePattern("yyyy/MM/dd").build());
-            long time = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
-            logContext.setEndTime(time);
+            long endTime = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
+            logContext.setEndTime(endTime);
 
             String actual = sut.formatEnd(logContext);
 
@@ -773,12 +773,28 @@ public class JaxRsAccessLogFormatterTest {
         @Test
         public void testEndFormatEndTimeWithDefaultFormat() {
             sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$endTime$]").build());
-            long time = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
-            logContext.setEndTime(time);
+            long endTime = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
+            logContext.setEndTime(endTime);
 
             String actual = sut.formatEnd(logContext);
 
             assertThat(actual, is("[2023-01-31 09:59:00.000]"));
+        }
+
+        /**
+         * リクエスト処理終了時のメッセージに実行時間を出力できる。
+         */
+        @Test
+        public void testEndFormatExecutionTime() {
+            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$executionTime$]").build());
+            long startTime = new GregorianCalendar(2023, 0, 1, 12, 0).getTimeInMillis();
+            logContext.setStartTime(startTime);
+            long endTime = new GregorianCalendar(2023, 0, 1, 13, 0).getTimeInMillis();
+            logContext.setEndTime(endTime);
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("["+ 1000 * 60 * 60 + "]"));
         }
 
         /**
@@ -805,6 +821,72 @@ public class JaxRsAccessLogFormatterTest {
             String actual = sut.formatEnd(logContext);
 
             assertThat(actual, is("[200]"));
+        }
+
+        /**
+         * リクエスト処理開始時のフォーマットを指定していない場合、デフォルトフォーマットで出力する。
+         */
+        @Test
+        public void testDefaultBeginFormat() {
+            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").build());
+
+            ThreadContext.setRequestId("testRequestId");
+            ThreadContext.setUserId("testUserId");
+
+            HttpSessionWrapper sessionMock = mock(HttpSessionWrapper.class);
+            when(sessionMock.getId()).thenReturn("testSessionId");
+            when(servletRequestMock.getSession(false)).thenReturn(sessionMock);
+
+            when(servletRequestMock.getRequestURL()).thenReturn(new StringBuffer("http://localhost"));
+            when(servletRequestMock.getQueryString()).thenReturn("param=value");
+            when(servletRequestMock.getServerPort()).thenReturn(8080);
+            when(servletRequestMock.getRemoteAddr()).thenReturn("192.168.0.0");
+            when(servletRequestMock.getRemoteHost()).thenReturn("localhost");
+            when(httpRequestMock.getMethod()).thenReturn("GET");
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("@@@@ BEGIN @@@@ rid = [testRequestId] uid = [testUserId] sid = [testSessionId]"
+                    + "\n\turl         = [http://localhost]"
+                    + "\n\tmethod      = [GET]"
+                    + "\n\tport        = [8080]"
+                    + "\n\tclient_ip   = [192.168.0.0]"
+                    + "\n\tclient_host = [localhost]"));
+        }
+
+        /**
+         * リクエスト処理終了時のフォーマットを指定していない場合、デフォルトフォーマットで出力する。
+         */
+        @Test
+        public void testDefaultEndFormat() {
+            sut.initialize(new PropertyBuilder().endOutputEnabled("true").build());
+
+            ThreadContext.setRequestId("testRequestId");
+            ThreadContext.setUserId("testUserId");
+
+            HttpSessionWrapper sessionMock = mock(HttpSessionWrapper.class);
+            when(sessionMock.getId()).thenReturn("testSessionId");
+            when(servletRequestMock.getSession(false)).thenReturn(sessionMock);
+
+            when(servletRequestMock.getRequestURL()).thenReturn(new StringBuffer("http://localhost"));
+            when(httpResponseMock.getStatusCode()).thenReturn(200);
+
+            long startTime = new GregorianCalendar(2023, 11, 31).getTimeInMillis();
+            logContext.setStartTime(startTime);
+            long endTime = new GregorianCalendar(2024, 0, 1).getTimeInMillis();
+            logContext.setEndTime(endTime);
+
+            logContext.setMaxMemory(999);
+            logContext.setFreeMemory(1);
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("@@@@ END @@@@ rid = [testRequestId] uid = [testUserId] sid = [testSessionId] url = [http://localhost] status_code = [200]"
+                    + "\n\tstart_time     = [2023-12-31 00:00:00.000]"
+                    + "\n\tend_time       = [2024-01-01 00:00:00.000]"
+                    + "\n\texecution_time = [" + 1000 * 60 * 60 * 24 + "]"
+                    + "\n\tmax_memory     = [999]"
+                    + "\n\tfree_memory    = [1]"));
         }
 
     }

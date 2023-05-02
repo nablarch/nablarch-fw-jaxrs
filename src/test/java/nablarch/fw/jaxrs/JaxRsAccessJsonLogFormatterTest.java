@@ -692,8 +692,8 @@ public class JaxRsAccessJsonLogFormatterTest {
             sut.initialize(new PropertyBuilder()
                     .endOutputEnabled("true").endTargets("startTime").messagePrefix("$")
                     .datePattern("yyyy/MM/dd").build());
-            long time = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
-            logContext.setStartTime(time);
+            long startTime = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
+            logContext.setStartTime(startTime);
 
             String actual = sut.formatEnd(logContext);
 
@@ -707,8 +707,8 @@ public class JaxRsAccessJsonLogFormatterTest {
         public void testEndFormatStartTimeWithDefaultFormat() {
             sut.initialize(new PropertyBuilder()
                     .endOutputEnabled("true").endTargets("startTime").messagePrefix("$").build());
-            long time = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
-            logContext.setStartTime(time);
+            long startTime = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
+            logContext.setStartTime(startTime);
 
             String actual = sut.formatEnd(logContext);
 
@@ -723,8 +723,8 @@ public class JaxRsAccessJsonLogFormatterTest {
             sut.initialize(new PropertyBuilder()
                     .endOutputEnabled("true").endTargets("endTime").messagePrefix("$")
                     .datePattern("yyyy/MM/dd").build());
-            long time = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
-            logContext.setEndTime(time);
+            long endTime = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
+            logContext.setEndTime(endTime);
 
             String actual = sut.formatEnd(logContext);
 
@@ -738,12 +738,30 @@ public class JaxRsAccessJsonLogFormatterTest {
         public void testEndFormatEndTimeWithDefaultFormat() {
             sut.initialize(new PropertyBuilder()
                     .endOutputEnabled("true").endTargets("endTime").messagePrefix("$").build());
-            long time = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
-            logContext.setEndTime(time);
+            long endTime = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
+            logContext.setEndTime(endTime);
 
             String actual = sut.formatEnd(logContext);
 
             assertThat(actual, is("${\"endTime\":\"2023-01-31 09:59:00.000\"}"));
+        }
+
+
+        /**
+         * リクエスト処理終了時のメッセージに実行時間を出力できる。
+         */
+        @Test
+        public void testEndFormatExecutionTime() {
+            sut.initialize(new PropertyBuilder()
+                    .endOutputEnabled("true").endTargets("executionTime").messagePrefix("$").build());
+            long startTime = new GregorianCalendar(2023, 0, 1, 12, 0).getTimeInMillis();
+            logContext.setStartTime(startTime);
+            long endTime = new GregorianCalendar(2023, 0, 1, 13, 0).getTimeInMillis();
+            logContext.setEndTime(endTime);
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("${\"executionTime\":" + 1000 * 60 * 60 + "}"));
         }
 
         /**
@@ -772,6 +790,60 @@ public class JaxRsAccessJsonLogFormatterTest {
             String actual = sut.formatEnd(logContext);
 
             assertThat(actual, is("${\"freeMemory\":100}"));
+        }
+
+        /**
+         * リクエスト処理開始時のメッセージにラベルを出力できる。
+         */
+        @Test
+        public void testBeginFormatLabel() {
+            sut.initialize(new PropertyBuilder()
+                    .beginOutputEnabled("true").beginTargets("label").messagePrefix("$")
+                    .beginLabel("BEGIN").build());
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("${\"label\":\"BEGIN\"}"));
+        }
+
+        /**
+         * リクエスト処理開始時のラベルが設定されていない場合、デフォルトラベルを出力できる。
+         */
+        @Test
+        public void testDefaultBeginLabel() {
+            sut.initialize(new PropertyBuilder()
+                    .beginOutputEnabled("true").beginTargets("label").messagePrefix("$").build());
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("${\"label\":\"HTTP ACCESS BEGIN\"}"));
+        }
+
+        /**
+         * リクエスト処理終了時のメッセージにラベルを出力できる。
+         */
+        @Test
+        public void testEndFormatLabel() {
+            sut.initialize(new PropertyBuilder()
+                    .endOutputEnabled("true").endTargets("label").messagePrefix("$")
+                    .endLabel("END").build());
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("${\"label\":\"END\"}"));
+        }
+
+        /**
+         * リクエスト処理終了時のラベルが設定されていない場合、デフォルトラベルを出力できる。
+         */
+        @Test
+        public void testDefaultEndLabel() {
+            sut.initialize(new PropertyBuilder()
+                    .endOutputEnabled("true").endTargets("label").messagePrefix("$").build());
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("${\"label\":\"HTTP ACCESS END\"}"));
         }
 
     }
@@ -864,6 +936,15 @@ public class JaxRsAccessJsonLogFormatterTest {
             return this;
         }
 
+        public PropertyBuilder beginLabel(String value) {
+            props.put("jaxRsAccessLogFormatter.beginLabel", value);
+            return this;
+        }
+
+        public PropertyBuilder endLabel(String value) {
+            props.put("jaxRsAccessLogFormatter.endLabel", value);
+            return this;
+        }
 
         public Map<String, String> build() {
             return Collections.unmodifiableMap(props);
