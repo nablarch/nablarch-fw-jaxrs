@@ -2,13 +2,10 @@ package nablarch.fw.jaxrs;
 
 import nablarch.core.log.LogUtil;
 import nablarch.fw.web.servlet.ServletExecutionContext;
-import nablarch.test.support.log.app.OnMemoryLogWriter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -22,19 +19,16 @@ public class JaxRsAccessLogHandlerTest {
     @Rule
     public RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
 
+    @Rule
+    public NablarchLogCapture logCapture = new NablarchLogCapture();
+
     @Before
     public void setUp() throws Exception {
-        OnMemoryLogWriter.clear();
         LogUtil.removeAllObjectsBoundToContextClassLoader();
     }
 
-    @After
-    public void tearDown() throws Exception {
-        OnMemoryLogWriter.clear();
-    }
-
     /**
-     * リクエスト処理開始時のログ出力対象であれば開始ログが出力される
+     * アクセスログ出力が有効であれば、開始および終了ログがINFOレベルで出力される。
      */
     @Test
     public void testOutputLog() {
@@ -43,21 +37,22 @@ public class JaxRsAccessLogHandlerTest {
 
         sut.handle(null, mock(ServletExecutionContext.class));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", "formatBegin", "formatEnd");
+        assertThat(logCapture.containsInfoMessage("formatBegin"), is(true));
+        assertThat(logCapture.containsInfoMessage("formatEnd"), is(true));
     }
 
     /**
-     * リクエスト処理終了時のログ出力対象であれば終了ログが出力される
+     * アクセスログ出力が無効であれば、開始および終了ログが出力されない。
      */
     @Test
     public void testNoOutputLog() {
-        System.setProperty("jaxRsAccessLogFormatter.className", NoLogOutputMock.class.getName());
+        System.setProperty("jaxRsAccessLogFormatter.className", LogNoOutputMock.class.getName());
         JaxRsAccessLogHandler sut = new JaxRsAccessLogHandler();
 
         sut.handle(null, mock(ServletExecutionContext.class));
 
-        List<String> messages = OnMemoryLogWriter.getMessages("writer.memory");
-        assertThat(messages.size(), is(0));
+        assertThat(logCapture.containsInfoMessage("formatBegin"), is(false));
+        assertThat(logCapture.containsInfoMessage("formatEnd"), is(false));
     }
 
     /**
@@ -89,7 +84,7 @@ public class JaxRsAccessLogHandlerTest {
     /**
      * アクセスログ出力の無効化を検証するためのモック。
      */
-    public static class NoLogOutputMock extends JaxRsAccessLogFormatter {
+    public static class LogNoOutputMock extends JaxRsAccessLogFormatter {
 
         @Override
         public boolean isBeginOutputEnabled() {
