@@ -114,9 +114,6 @@ public class JaxRsAccessLogFormatter {
     /** ボディ出力時のマスク処理を行うクラス名を取得する際に使用するプロパティ名 */
     private static final String PROPS_BODY_MASKING_FILTER = PROPS_PREFIX + "bodyMaskingFilter";
 
-    /** ボディ出力時の最大サイズを取得する際に使用するプロパティ名 */
-    private static final String PROPS_BODY_MAX_SIZE = PROPS_PREFIX + "bodyMaxSize";
-
     /** 多値指定(カンマ区切り)のプロパティを分割する際に使用するパターン */
     private static final Pattern MULTIVALUE_SEPARATOR_PATTERN = Pattern.compile(",");
 
@@ -222,19 +219,10 @@ public class JaxRsAccessLogFormatter {
         logItems.put("$freeMemory$", new FreeMemoryItem());
 
         LogContentMaskingFilter bodyMaskingFilter = createBodyMaskingFilter(props);
-        Integer bodyMaxSize = getBodyMaxSize(props);
-        logItems.put("$requestBody$", new RequestBodyItem(bodyMaskingFilter, bodyMaxSize));
-        logItems.put("$responseBody$", new ResponseBodyItem(bodyMaskingFilter, bodyMaxSize));
+        logItems.put("$requestBody$", new RequestBodyItem(bodyMaskingFilter));
+        logItems.put("$responseBody$", new ResponseBodyItem(bodyMaskingFilter));
 
         return logItems;
-    }
-
-    protected Integer getBodyMaxSize(Map<String, String> props) {
-        String value = props.get(PROPS_BODY_MAX_SIZE);
-        if (value == null) {
-            return null;
-        }
-        return Integer.valueOf(value);
     }
 
     /**
@@ -614,11 +602,10 @@ public class JaxRsAccessLogFormatter {
         /**
          * リクエストのボディを読み込む。
          *
-         * @param maxSize 最大読込サイズ
          * @return ボディの文字列表現
          * @throws IOException 読込に失敗した場合
          */
-        public String readRequestBody(Integer maxSize) throws IOException {
+        public String readRequestBody() throws IOException {
             NablarchHttpServletRequestWrapper servletRequest = context.getServletRequest();
             int contentLength = servletRequest.getContentLength();
             if (contentLength < 1) {
@@ -627,13 +614,11 @@ public class JaxRsAccessLogFormatter {
             }
             // InputStreamではresetに対応できなかったため、Readerを使用する
             BufferedReader reader = servletRequest.getReader();
-            int bufSize = maxSize != null ? maxSize : contentLength;
-            char[] peeked = new char[bufSize];
-            reader.mark(bufSize);
+            char[] peeked = new char[contentLength];
+            reader.mark(contentLength);
             try {
                 int readSize = reader.read(peeked);
-                CharBuffer buf = CharBuffer.wrap(peeked, 0, readSize);
-                return buf.toString();
+                return CharBuffer.wrap(peeked, 0, readSize).toString();
             } finally {
                 // リクエスト処理で改めてボディを読み込めるようにリセットしておく
                 reader.reset();
@@ -643,11 +628,10 @@ public class JaxRsAccessLogFormatter {
         /**
          * レスポンスのボディを読み込む。
          *
-         * @param maxSize 最大読込サイズ
          * @return ボディの文字列表現
          * @throws IOException 読込に失敗した場合
          */
-        public String readResponseBody(Integer maxSize) throws IOException {
+        public String readResponseBody() throws IOException {
             if (response.isBodyEmpty()) {
                 return "";
             }
@@ -656,24 +640,16 @@ public class JaxRsAccessLogFormatter {
             // バッファからの読込では取得の都度Streamが生成されるため、Streamの状態はリセットしない。
             InputStream bodyStream = response.getBodyStream();
             try {
-                ByteBuffer buf;
-                if (maxSize != null) {
-                    byte[] bytes = new byte[maxSize];
-                    int readSize = bodyStream.read(bytes, 0, maxSize);
-                    buf = ByteBuffer.wrap(bytes, 0, readSize);
-                } else {
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    while (true) {
-                        byte[] bytes = new byte[1024];
-                        int readSize = bodyStream.read(bytes);
-                        if (readSize == -1) {
-                            break;
-                        }
-                        out.write(bytes, 0, readSize);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                while (true) {
+                    byte[] bytes = new byte[1024];
+                    int readSize = bodyStream.read(bytes);
+                    if (readSize == -1) {
+                        break;
                     }
-                    buf = ByteBuffer.wrap(out.toByteArray());
+                    out.write(bytes, 0, readSize);
                 }
-                return String.valueOf(response.getCharset().decode(buf));
+                return String.valueOf(response.getCharset().decode(ByteBuffer.wrap(out.toByteArray())));
 
             } finally {
                 bodyStream.close();
@@ -996,24 +972,19 @@ public class JaxRsAccessLogFormatter {
         /** マスク処理フィルタ */
         private final LogContentMaskingFilter maskingFilter;
 
-        /** 出力項目の最大サイズ */
-        private final Integer maxSize;
-
         /**
          * コンストラクタ
          *
          * @param maskingFilter マスク処理フィルタ
-         * @param maxSize 出力項目の最大サイズ
          */
-        public RequestBodyItem(LogContentMaskingFilter maskingFilter, Integer maxSize) {
+        public RequestBodyItem(LogContentMaskingFilter maskingFilter) {
             this.maskingFilter = maskingFilter;
-            this.maxSize = maxSize;
         }
 
         @Override
         public String get(JaxRsAccessLogContext context) {
             try {
-                String content = context.readRequestBody(maxSize);
+                String content = context.readRequestBody();
                 if (content.isEmpty()) {
                     return content;
                 }
@@ -1034,24 +1005,19 @@ public class JaxRsAccessLogFormatter {
         /** マスク処理フィルタ */
         private final LogContentMaskingFilter maskingFilter;
 
-        /** 出力項目の最大サイズ */
-        private final Integer maxSize;
-
         /**
          * コンストラクタ
          *
          * @param maskingFilter マスク処理フィルタ
-         * @param maxSize 出力項目の最大サイズ
          */
-        public ResponseBodyItem(LogContentMaskingFilter maskingFilter, Integer maxSize) {
+        public ResponseBodyItem(LogContentMaskingFilter maskingFilter) {
             this.maskingFilter = maskingFilter;
-            this.maxSize = maxSize;
         }
 
         @Override
         public String get(JaxRsAccessLogContext context) {
             try {
-                String content = context.readResponseBody(maxSize);
+                String content = context.readResponseBody();
                 if (content.isEmpty()) {
                     return content;
                 }

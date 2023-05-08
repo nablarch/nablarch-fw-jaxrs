@@ -234,9 +234,8 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
         objectBuilders.put(TARGET_NAME_FREE_MEMORY, new FreeMemoryBuilder());
 
         LogContentMaskingFilter bodyMaskingFilter = createBodyMaskingFilter(props);
-        Integer bodyMaxSize = getBodyMaxSize(props);
-        objectBuilders.put(TARGET_NAME_REQUEST_BODY, new RequestBodyBuilder(bodyMaskingFilter, bodyMaxSize));
-        objectBuilders.put(TARGET_NAME_RESPONSE_BODY, new ResponseBodyBuilder(bodyMaskingFilter, bodyMaxSize));
+        objectBuilders.put(TARGET_NAME_REQUEST_BODY, new RequestBodyBuilder(bodyMaskingFilter));
+        objectBuilders.put(TARGET_NAME_RESPONSE_BODY, new ResponseBodyBuilder(bodyMaskingFilter));
 
         return objectBuilders;
     }
@@ -655,18 +654,13 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
         /** マスク処理フィルタ */
         private final LogContentMaskingFilter maskingFilter;
 
-        /** 出力項目の最大サイズ */
-        private final Integer maxSize;
-
         /**
          * コンストラクタ
          *
          * @param maskingFilter マスク処理フィルタ
-         * @param maxSize 出力項目の最大サイズ
          */
-        public RequestBodyBuilder(LogContentMaskingFilter maskingFilter, Integer maxSize) {
+        public RequestBodyBuilder(LogContentMaskingFilter maskingFilter) {
             this.maskingFilter = maskingFilter;
-            this.maxSize = maxSize;
         }
 
         /**
@@ -687,7 +681,7 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
          */
         private String readRequestBody(JaxRsAccessLogContext context) {
             try {
-                String content = context.readRequestBody(maxSize);
+                String content = context.readRequestBody();
                 if (content.isEmpty()) {
                     return content;
                 }
@@ -708,18 +702,13 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
         /** マスク処理フィルタ */
         private final LogContentMaskingFilter maskingFilter;
 
-        /** 出力項目の最大サイズ */
-        private final Integer maxSize;
-
         /**
          * コンストラクタ
          *
          * @param maskingFilter マスク処理フィルタ
-         * @param maxSize 出力項目の最大サイズ
          */
-        public ResponseBodyBuilder(LogContentMaskingFilter maskingFilter, Integer maxSize) {
+        public ResponseBodyBuilder(LogContentMaskingFilter maskingFilter) {
             this.maskingFilter = maskingFilter;
-            this.maxSize = maxSize;
         }
 
         /**
@@ -741,7 +730,7 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
          */
         private String readResponseBody(JaxRsAccessLogContext context) {
             try {
-                String content = context.readResponseBody(maxSize);
+                String content = context.readResponseBody();
                 if (content.isEmpty()) {
                     return content;
                 }
