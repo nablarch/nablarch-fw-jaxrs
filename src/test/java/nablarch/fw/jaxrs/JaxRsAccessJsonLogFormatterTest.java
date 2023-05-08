@@ -1,5 +1,6 @@
 package nablarch.fw.jaxrs;
 
+import com.sun.xml.bind.StringInputStream;
 import nablarch.core.ThreadContext;
 import nablarch.fw.jaxrs.JaxRsAccessLogFormatter.JaxRsAccessLogContext;
 import nablarch.fw.web.HttpRequest;
@@ -13,6 +14,9 @@ import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -126,7 +130,7 @@ public class JaxRsAccessJsonLogFormatterTest {
     /**
      * ログ出力項目のフォーマット
      */
-    public static class LogItemInRequest {
+    public static class LogItem {
 
         private final JaxRsAccessJsonLogFormatter sut = new JaxRsAccessJsonLogFormatter();
 
@@ -846,6 +850,35 @@ public class JaxRsAccessJsonLogFormatterTest {
             assertThat(actual, is("${\"label\":\"HTTP ACCESS END\"}"));
         }
 
+        /**
+         * リクエスト処理開始時のメッセージにリクエストボディを出力できる。
+         */
+        @Test
+        public void testBeginFormatRequestBody() throws Exception {
+            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginTargets("requestBody").build());
+            String requestBody = "{\"id\":\"test\"}";
+            when(servletRequestMock.getReader()).thenReturn(new BufferedReader(new StringReader(requestBody)));
+            when(servletRequestMock.getContentLength()).thenReturn(requestBody.length());
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("${\"requestBody\":{\"id\":\"test\"}}"));
+        }
+
+        /**
+         * リクエスト処理終了時のメッセージにレスポンスボディを出力できる。
+         */
+        @Test
+        public void testEndFormatResponseBody() {
+            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endTargets("responseBody").build());
+            String responseBody = "{\"id\":\"test\"}";
+            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("${\"requestBody\":{\"id\":\"test\"}}"));
+        }
     }
 
     public static class ContainsMemoryItem {
