@@ -855,7 +855,8 @@ public class JaxRsAccessJsonLogFormatterTest {
          */
         @Test
         public void testBeginFormatRequestBody() throws Exception {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginTargets("requestBody").build());
+            sut.initialize(new PropertyBuilder().beginOutputEnabled("true")
+                    .beginTargets("requestBody").messagePrefix("$").build());
             String requestBody = "{\"id\":\"test\"}";
             when(servletRequestMock.getReader()).thenReturn(new BufferedReader(new StringReader(requestBody)));
             when(servletRequestMock.getContentLength()).thenReturn(requestBody.length());
@@ -870,14 +871,15 @@ public class JaxRsAccessJsonLogFormatterTest {
          */
         @Test
         public void testEndFormatResponseBody() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endTargets("responseBody").build());
+            sut.initialize(new PropertyBuilder().endOutputEnabled("true")
+                    .endTargets("responseBody").messagePrefix("$").build());
             String responseBody = "{\"id\":\"test\"}";
             when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
 
             String actual = sut.formatEnd(logContext);
 
-            assertThat(actual, is("${\"requestBody\":{\"id\":\"test\"}}"));
+            assertThat(actual, is("${\"responseBody\":{\"id\":\"test\"}}"));
         }
     }
 
