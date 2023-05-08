@@ -19,7 +19,10 @@ import nablarch.fw.web.servlet.ServletExecutionContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -632,6 +635,7 @@ public class JaxRsAccessLogFormatter {
                 CharBuffer buf = CharBuffer.wrap(peeked, 0, readSize);
                 return buf.toString();
             } finally {
+                // リクエスト処理で改めてボディを読み込めるようにリセットしておく
                 reader.reset();
             }
         }
@@ -641,23 +645,39 @@ public class JaxRsAccessLogFormatter {
          *
          * @param maxSize 最大読込サイズ
          * @return ボディの文字列表現
+         * @throws IOException 読込に失敗した場合
          */
-        public String readResponseBody(Integer maxSize) {
-            String contentLengthString = response.getContentLength();
-            int contentLength = contentLengthString != null ? Integer.parseInt(contentLengthString) : 0;
-            if (contentLength < 1) {
+        public String readResponseBody(Integer maxSize) throws IOException {
+            if (response.isBodyEmpty()) {
                 return "";
             }
-            int readSize = maxSize != null ? maxSize : contentLength;
-            // Jackson用BodyConverterでは、レスポンスをinputStreamではなく
-            // 内部バッファ（メモリorファイル）に書き込んでいる。
-            // 内部バッファに直接アクセスするメソッドは公開されていないため、
-            // 内部バッファから文字列を取得できるgetBodyStringを呼び出す
-            String bodyString = response.getBodyString();
-            if (bodyString.length() > readSize) {
-                return bodyString.substring(0, readSize);
+            // Nablarchが提供しているBodyConverterではレスポンスボディをバッファに書き込むため、
+            // 現時点ではバッファからの読込のみ対応する。
+            // バッファからの読込では取得の都度Streamが生成されるため、Streamの状態はリセットしない。
+            InputStream bodyStream = response.getBodyStream();
+            try {
+                ByteBuffer buf;
+                if (maxSize != null) {
+                    byte[] bytes = new byte[maxSize];
+                    int readSize = bodyStream.read(bytes, 0, maxSize);
+                    buf = ByteBuffer.wrap(bytes, 0, readSize);
+                } else {
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    while (true) {
+                        byte[] bytes = new byte[1024];
+                        int readSize = bodyStream.read(bytes);
+                        if (readSize == -1) {
+                            break;
+                        }
+                        out.write(bytes, 0, readSize);
+                    }
+                    buf = ByteBuffer.wrap(out.toByteArray());
+                }
+                return String.valueOf(response.getCharset().decode(buf));
+
+            } finally {
+                bodyStream.close();
             }
-            return bodyString;
         }
 
     }
