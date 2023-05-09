@@ -4,10 +4,6 @@ import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -16,6 +12,25 @@ import static org.hamcrest.Matchers.is;
  */
 @RunWith(Enclosed.class)
 public class JaxRsBodyMaskingFilterTest {
+
+    /**
+     * マスク対象が空文字
+     */
+    public static class EmptyString {
+
+        /**
+         * マスク処理しない。
+         */
+        @Test
+        public void testNotMask() {
+            JaxRsBodyMaskingFilter sut = new JaxRsBodyMaskingFilter();
+            sut.initialize(new AppLogPropertyBuilder().maskingItemNames("id").build());
+
+            String actual = sut.mask("");
+
+            assertThat(actual, is(""));
+        }
+    }
 
     /**
      * マスク対象がXML文字列。
@@ -28,7 +43,7 @@ public class JaxRsBodyMaskingFilterTest {
         @Test
         public void testNotMask() {
             JaxRsBodyMaskingFilter sut = new JaxRsBodyMaskingFilter();
-            sut.initialize(new PropertyBuilder().maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingItemNames("id").build());
 
             String content = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><id>hoge</id>";
             String actual = sut.mask(content);
@@ -50,7 +65,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testNameMatch() {
-            sut.initialize(new PropertyBuilder().maskingChar("x").maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("x").maskingItemNames("id").build());
 
             String content = "{\"id\":\"hoge\"}";
             String actual = sut.mask(content);
@@ -63,7 +78,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testMultipleNameMatch() {
-            sut.initialize(new PropertyBuilder().maskingChar("x").maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("x").maskingItemNames("id").build());
 
             String content = "{\"id\":\"hoge\",\"obj\":{\"id\":\"hoge\"}}";
             String actual = sut.mask(content);
@@ -76,7 +91,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testMakingItemNameIfUndefined() {
-            sut.initialize(new PropertyBuilder().build());
+            sut.initialize(new AppLogPropertyBuilder().build());
 
             String content = "{\"id\":\"hoge\"}";
             String actual = sut.mask(content);
@@ -89,7 +104,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testMakingItemNameIfEmpty() {
-            sut.initialize(new PropertyBuilder().maskingItemNames("").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingItemNames("").build());
 
             String content = "{\"id\":\"hoge\"}";
             String actual = sut.mask(content);
@@ -102,7 +117,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testMakingItemNameIfSeparatorOnly() {
-            sut.initialize(new PropertyBuilder().maskingItemNames(",,").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingItemNames(",,").build());
 
             String content = "{\",,\":\"hoge\"}";
             String actual = sut.mask(content);
@@ -115,7 +130,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testMakingCharIfUndefined() {
-            sut.initialize(new PropertyBuilder().maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingItemNames("id").build());
 
             String content = "{\"id\":\"hoge\"}";
             String actual = sut.mask(content);
@@ -128,7 +143,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testMakingCharIfEmpty() {
-            sut.initialize(new PropertyBuilder().maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingItemNames("id").build());
 
             String content = "{\"id\":\"hoge\"}";
             String actual = sut.mask(content);
@@ -141,7 +156,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test(expected = IllegalArgumentException.class)
         public void testMaskingCharInvalidLength() {
-            sut.initialize(new PropertyBuilder().maskingChar("xx").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("xx").build());
         }
 
         /**
@@ -149,7 +164,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testStartWithMatch() {
-            sut.initialize(new PropertyBuilder().maskingChar("x").maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("x").maskingItemNames("id").build());
 
             String content = "{\"idx\":\"hoge\"}";
             String actual = sut.mask(content);
@@ -162,7 +177,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testEndWithMatch() {
-            sut.initialize(new PropertyBuilder().maskingChar("x").maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("x").maskingItemNames("id").build());
 
             String content = "{\"xid\":\"hoge\"}";
             String actual = sut.mask(content);
@@ -175,7 +190,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testPartialMatch() {
-            sut.initialize(new PropertyBuilder().maskingChar("x").maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("x").maskingItemNames("id").build());
 
             String content = "{\"xidx\":\"hoge\"}";
             String actual = sut.mask(content);
@@ -188,7 +203,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testTypeString() {
-            sut.initialize(new PropertyBuilder().maskingChar("x").maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("x").maskingItemNames("id").build());
 
             String escaped = "\\\"" + "\\\\" + "\\/" + "\\b" + "\\r\\n" + "\\t";
             String content = "[{\"id\":\"azAZてすテスﾃｽ検証\"},{\"id\":\"\"},{\"id\":\"" + escaped + "\"}]";
@@ -202,7 +217,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testTypeNumber() {
-            sut.initialize(new PropertyBuilder().maskingChar("x").maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("x").maskingItemNames("id").build());
 
             String content = "[{\"id\":1},{\"id\":-1},{\"id\":1.125e+1}]";
             String actual = sut.mask(content);
@@ -215,7 +230,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testTypeBoolean() {
-            sut.initialize(new PropertyBuilder().maskingChar("x").maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("x").maskingItemNames("id").build());
 
             String content = "[{\"id\":true},{\"id\":false}]";
             String actual = sut.mask(content);
@@ -228,7 +243,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testTypeNull() {
-            sut.initialize(new PropertyBuilder().maskingChar("x").maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("x").maskingItemNames("id").build());
 
             String content = "{\"id\":null}";
             String actual = sut.mask(content);
@@ -241,7 +256,7 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testTypeArray() {
-            sut.initialize(new PropertyBuilder().maskingChar("x").maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("x").maskingItemNames("id").build());
 
             String content = "{\"id\":[\"hoge\",\"fuga\"]}";
             String actual = sut.mask(content);
@@ -254,34 +269,12 @@ public class JaxRsBodyMaskingFilterTest {
          */
         @Test
         public void testTypeObject() {
-            sut.initialize(new PropertyBuilder().maskingChar("x").maskingItemNames("id").build());
+            sut.initialize(new AppLogPropertyBuilder().maskingChar("x").maskingItemNames("id").build());
 
             String content = "{\"id\":{\"name\":\"hoge\"}}";
             String actual = sut.mask(content);
 
             assertThat(actual, is(content));
-        }
-    }
-
-    /**
-     * ログ出力プロパティ情報の作成補助。
-     */
-    private static class PropertyBuilder {
-
-        private final Map<String, String> props = new HashMap<String, String>();
-
-        public PropertyBuilder maskingChar(String value) {
-            props.put("jaxRsAccessLogFormatter.maskingChar", value);
-            return this;
-        }
-
-        public PropertyBuilder maskingItemNames(String value) {
-            props.put("jaxRsAccessLogFormatter.bodyMaskingItemNames", value);
-            return this;
-        }
-
-        public Map<String, String> build() {
-            return Collections.unmodifiableMap(props);
         }
     }
 }

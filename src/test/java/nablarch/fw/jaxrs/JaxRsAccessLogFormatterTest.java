@@ -17,19 +17,35 @@ import org.junit.runner.RunWith;
 import java.io.BufferedReader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
-import java.util.Collections;
+import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(Enclosed.class)
 public class JaxRsAccessLogFormatterTest {
+
+    /***
+     * ログコンテキスト
+     */
+    public static class LogContext {
+
+        @Test
+        public void testCreateLogContext() {
+            JaxRsAccessLogFormatter sut = new JaxRsAccessLogFormatter();
+
+            JaxRsAccessLogContext actual = sut.createAccessLogContext();
+
+            assertThat(actual, instanceOf(JaxRsAccessLogContext.class));
+        }
+    }
 
     /**
      * リクエスト処理開始時の出力有無
@@ -43,7 +59,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginOutputEnabledIfUndefined() {
-            sut.initialize(new PropertyBuilder().build());
+            sut.initialize(new AppLogPropertyBuilder().build());
 
             assertThat(sut.isBeginOutputEnabled(), is(true));
         }
@@ -53,7 +69,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginOutputEnabledIfEmpty() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("").build());
+            sut.initialize(new AppLogPropertyBuilder().beginOutputEnabled("").build());
 
             assertThat(sut.isBeginOutputEnabled(), is(false));
         }
@@ -63,7 +79,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginOutputEnabledIfTrue() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").build());
+            sut.initialize(new AppLogPropertyBuilder().beginOutputEnabled("true").build());
 
             assertThat(sut.isBeginOutputEnabled(), is(true));
         }
@@ -73,7 +89,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginOutputEnabledIfFalse() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("false").build());
+            sut.initialize(new AppLogPropertyBuilder().beginOutputEnabled("false").build());
 
             assertThat(sut.isBeginOutputEnabled(), is(false));
         }
@@ -91,7 +107,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndOutputEnabledIfUndefined() {
-            sut.initialize(new PropertyBuilder().build());
+            sut.initialize(new AppLogPropertyBuilder().build());
 
             assertThat(sut.isEndOutputEnabled(), is(true));
         }
@@ -101,7 +117,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndOutputEnabledIfEmpty() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("").build());
+            sut.initialize(new AppLogPropertyBuilder().endOutputEnabled("").build());
 
             assertThat(sut.isEndOutputEnabled(), is(false));
         }
@@ -111,7 +127,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndOutputEnabledIfTrue() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").build());
+            sut.initialize(new AppLogPropertyBuilder().endOutputEnabled("true").build());
 
             assertThat(sut.isEndOutputEnabled(), is(true));
         }
@@ -121,7 +137,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndOutputEnabledIfFalse() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("false").build());
+            sut.initialize(new AppLogPropertyBuilder().endOutputEnabled("false").build());
 
             assertThat(sut.isEndOutputEnabled(), is(false));
         }
@@ -145,7 +161,7 @@ public class JaxRsAccessLogFormatterTest {
         private final HttpResponse httpResponseMock = mock(HttpResponse.class);
 
         @Before
-        public void setUp() throws Exception {
+        public void setUp() {
             when(executionContextMock.getServletRequest()).thenReturn(servletRequestMock);
             logContext.setContext(executionContextMock);
             logContext.setRequest(httpRequestMock);
@@ -153,7 +169,7 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         @After
-        public void tearDown() throws Exception {
+        public void tearDown() {
             ThreadContext.clear();
         }
 
@@ -162,7 +178,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginFormatRequestId() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$requestId$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$requestId$]").build());
             ThreadContext.setRequestId("test");
 
             String actual = sut.formatBegin(logContext);
@@ -175,7 +192,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatRequestId() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$requestId$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$requestId$]").build());
             ThreadContext.setRequestId("test");
 
             String actual = sut.formatEnd(logContext);
@@ -188,7 +206,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testFormatRequestIdIfUndefined() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$requestId$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$requestId$]").build());
 
             String actual = sut.formatBegin(logContext);
 
@@ -200,7 +219,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginFormatUserId() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$userId$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$userId$]").build());
             ThreadContext.setUserId("test");
 
             String actual = sut.formatBegin(logContext);
@@ -213,7 +233,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatUserId() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$userId$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$userId$]").build());
             ThreadContext.setUserId("test");
 
             String actual = sut.formatEnd(logContext);
@@ -226,7 +247,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testFormatUserIdIfUndefined() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$userId$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$userId$]").build());
 
             String actual = sut.formatBegin(logContext);
 
@@ -238,7 +260,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginFormatUrl() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$url$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$url$]").build());
             when(servletRequestMock.getRequestURL()).thenReturn(new StringBuffer("http://localhost"));
 
             String actual = sut.formatBegin(logContext);
@@ -251,7 +274,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatUrl() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$url$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$url$]").build());
             when(servletRequestMock.getRequestURL()).thenReturn(new StringBuffer("http://localhost"));
 
             String actual = sut.formatEnd(logContext);
@@ -264,7 +288,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginFormatQuery() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$query$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$query$]").build());
             when(servletRequestMock.getQueryString()).thenReturn("param=value");
 
             String actual = sut.formatBegin(logContext);
@@ -277,7 +302,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatQuery() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$query$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$query$]").build());
             when(servletRequestMock.getQueryString()).thenReturn("param=value");
 
             String actual = sut.formatEnd(logContext);
@@ -286,11 +312,25 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
+         * クエリ文字列が設定されていなければ、空文字を出力する。
+         */
+        @Test
+        public void testQueryIfEmpty() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$query$]").build());
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
          * リクエスト処理開始時のメッセージにポート番号を出力できる。
          */
         @Test
         public void testBeginFormatPort() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$port$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$port$]").build());
             when(servletRequestMock.getServerPort()).thenReturn(8080);
 
             String actual = sut.formatBegin(logContext);
@@ -303,7 +343,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatPort() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$port$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$port$]").build());
             when(servletRequestMock.getServerPort()).thenReturn(8080);
 
             String actual = sut.formatEnd(logContext);
@@ -316,7 +357,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginFormatMethod() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$method$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$method$]").build());
             when(httpRequestMock.getMethod()).thenReturn("GET");
 
             String actual = sut.formatBegin(logContext);
@@ -329,7 +371,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatMethod() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$method$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$method$]").build());
             when(httpRequestMock.getMethod()).thenReturn("GET");
 
             String actual = sut.formatEnd(logContext);
@@ -342,7 +385,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginFormatSessionId() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$sessionId$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$sessionId$]").build());
             HttpSessionWrapper sessionMock = mock(HttpSessionWrapper.class);
             when(sessionMock.getId()).thenReturn("id");
             when(servletRequestMock.getSession(false)).thenReturn(sessionMock);
@@ -357,7 +401,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatSessionId() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$sessionId$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$sessionId$]").build());
             HttpSessionWrapper sessionMock = mock(HttpSessionWrapper.class);
             when(sessionMock.getId()).thenReturn("id");
             when(servletRequestMock.getSession(false)).thenReturn(sessionMock);
@@ -368,11 +413,25 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
+         * HTTPセッションを使用していなければ、HTTPセッションIDには空文字を出力する。
+         */
+        @Test
+        public void testSessionIdIfEmpty() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$sessionId$]").build());
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
          * リクエスト処理開始時のメッセージにセッションストアIDを出力できる。
          */
         @Test
         public void testBeginFormatSessionStoreId() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$sessionStoreId$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$sessionStoreId$]").build());
             when(executionContextMock.getRequestScopedVar("nablarch_internal_session_store_id")).thenReturn("id");
 
             String actual = sut.formatBegin(logContext);
@@ -385,7 +444,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatSessionStoreId() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$sessionStoreId$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$sessionStoreId$]").build());
             when(executionContextMock.getRequestScopedVar("nablarch_internal_session_store_id")).thenReturn("id");
 
             String actual = sut.formatEnd(logContext);
@@ -394,11 +454,25 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
+         * セッションストアを使用していなければ、セッションストアIDにはnullを出力する。
+         */
+        @Test
+        public void testSessionStoreIdIfEmpty() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$sessionStoreId$]").build());
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[null]"));
+        }
+
+        /**
          * リクエスト処理開始時のメッセージにクライアント端末IPアドレスを出力できる。
          */
         @Test
         public void testBeginFormatClientIpAddress() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$clientIpAddress$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$clientIpAddress$]").build());
             when(servletRequestMock.getRemoteAddr()).thenReturn("192.168.0.0");
 
             String actual = sut.formatBegin(logContext);
@@ -411,7 +485,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatClientIpAddress() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$clientIpAddress$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$clientIpAddress$]").build());
             when(servletRequestMock.getRemoteAddr()).thenReturn("192.168.0.0");
 
             String actual = sut.formatEnd(logContext);
@@ -424,7 +499,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginFormatClientHost() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$clientHost$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$clientHost$]").build());
             when(servletRequestMock.getRemoteHost()).thenReturn("localhost");
 
             String actual = sut.formatBegin(logContext);
@@ -437,7 +513,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatClientHost() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$clientHost$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$clientHost$]").build());
             when(servletRequestMock.getRemoteHost()).thenReturn("localhost");
 
             String actual = sut.formatEnd(logContext);
@@ -450,7 +527,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginFormatUserAgent() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$clientUserAgent$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$clientUserAgent$]").build());
             when(servletRequestMock.getHeader("User-Agent")).thenReturn("agent");
 
             String actual = sut.formatBegin(logContext);
@@ -463,7 +541,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatUserAgent() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$clientUserAgent$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$clientUserAgent$]").build());
             when(servletRequestMock.getHeader("User-Agent")).thenReturn("agent");
 
             String actual = sut.formatEnd(logContext);
@@ -472,11 +551,25 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
+         * User-Agentが設定されていなければ、空文字を出力する。
+         */
+        @Test
+        public void testUserAgentIfEmpty() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$clientUserAgent$]").build());
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
          * リクエスト処理開始時のメッセージにリクエストパラメータを出力できる。
          */
         @Test
         public void testBeginFormatParameter() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$parameters$]")
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$parameters$]")
                     .parametersSeparator("@").build());
             Map<String, String[]> parameter = new HashMap<String, String[]>();
             parameter.put("param1", new String[]{"value1"});
@@ -493,7 +586,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatParameter() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$parameters$]")
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$parameters$]")
                     .parametersSeparator("@").build());
             Map<String, String[]> parameter = new HashMap<String, String[]>();
             parameter.put("param1", new String[]{"value1"});
@@ -506,11 +600,28 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
+         * リクエストパラメータが設定されていなければ、空表現を出力する。
+         */
+        @Test
+        public void testParameterIfEmpty() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$parameters$]")
+                    .parametersSeparator("@").build());
+            Map<String, String[]> parameter = new HashMap<String, String[]>();
+            when(httpRequestMock.getParamMap()).thenReturn(parameter);
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[{}]"));
+        }
+
+        /**
          * リクエストパラメータのセパレータが未設定の場合、デフォルトセパレータで出力する。
          */
         @Test
         public void testDefaultParameterSeparator() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$parameters$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$parameters$]").build());
             Map<String, String[]> parameter = new HashMap<String, String[]>();
             parameter.put("param1", new String[]{"value1"});
             parameter.put("param2", new String[]{"value2"});
@@ -526,7 +637,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testMaskParameter() {
-            sut.initialize(new PropertyBuilder()
+            sut.initialize(new AppLogPropertyBuilder()
                     .beginOutputEnabled("true").beginFormat("[$parameters$]")
                     .maskingChar("x").maskingPatterns("param").build());
             Map<String, String[]> parameter = new HashMap<String, String[]>();
@@ -551,7 +662,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testMaskParameterWithMultiplePattern() {
-            sut.initialize(new PropertyBuilder()
+            sut.initialize(new AppLogPropertyBuilder()
                     .beginOutputEnabled("true").beginFormat("[$parameters$]")
                     .maskingChar("x").maskingPatterns("1pa,am2,3param3").build());
             Map<String, String[]> parameter = new HashMap<String, String[]>();
@@ -576,7 +687,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testMaskParameterWithDefaultMaskingChar() {
-            sut.initialize(new PropertyBuilder()
+            sut.initialize(new AppLogPropertyBuilder()
                     .beginOutputEnabled("true").beginFormat("[$parameters$]")
                     .maskingPatterns("param").build());
             Map<String, String[]> parameter = new HashMap<String, String[]>();
@@ -589,11 +700,39 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
+         * マスク文字に空白が含まれていた場合、空白部分は除去される。
+         */
+        @Test
+        public void testMaskPatternsIfSpace() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$parameters$]")
+                    .maskingPatterns(" param ,, ").build());
+            Map<String, String[]> parameter = new HashMap<String, String[]>();
+            parameter.put("param", new String[]{"value"});
+            when(httpRequestMock.getParamMap()).thenReturn(parameter);
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, containsString("param = [*****]"));
+        }
+
+        /**
+         * マスク文字が1文字を超えている場合、例外を送出する。
+         */
+        @Test(expected = IllegalArgumentException.class)
+        public void testMaskCharIfOverLength() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$parameters$]")
+                    .maskingChar("12").build());
+        }
+
+        /**
          * リクエスト処理開始時のメッセージにセッションスコープ情報を出力できる。
          */
         @Test
         public void testBeginFormatSessionScope() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$sessionScope$]")
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$sessionScope$]")
                     .sessionScopeSeparator("@").build());
             Map<String, Object> scope = new HashMap<String, Object>();
             scope.put("param1", "value1");
@@ -611,7 +750,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatSessionScope() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$sessionScope$]")
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$sessionScope$]")
                     .sessionScopeSeparator("@").build());
             Map<String, Object> scope = new HashMap<String, Object>();
             scope.put("param1", "value1");
@@ -625,11 +765,29 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
+         * セッションスコープ情報が設定されていなければ、空表現を出力する。
+         */
+        @Test
+        public void testSessionScopeIfEmpty() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$sessionScope$]")
+                    .sessionScopeSeparator("@").build());
+            Map<String, Object> scope = new HashMap<String, Object>();
+            when(executionContextMock.hasSession()).thenReturn(true);
+            when(executionContextMock.getSessionScopeMap()).thenReturn(scope);
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[{}]"));
+        }
+
+        /**
          * セッションスコープ情報のセパレータが未設定の場合、デフォルトセパレータで出力する。
          */
         @Test
         public void testDefaultSessionSeparator() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$sessionScope$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$sessionScope$]").build());
             Map<String, Object> scope = new HashMap<String, Object>();
             scope.put("param1", "value1");
             scope.put("param2", "value2");
@@ -646,7 +804,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testMaskSessionScope() {
-            sut.initialize(new PropertyBuilder()
+            sut.initialize(new AppLogPropertyBuilder()
                     .beginOutputEnabled("true").beginFormat("[$sessionScope$]")
                     .maskingChar("x").maskingPatterns("param").build());
             Map<String, Object> scope = new HashMap<String, Object>();
@@ -673,7 +831,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testMaskSessionScopeWithMultiplePattern() {
-            sut.initialize(new PropertyBuilder()
+            sut.initialize(new AppLogPropertyBuilder()
                     .beginOutputEnabled("true").beginFormat("[$sessionScope$]")
                     .maskingChar("x").maskingPatterns("1pa,am2,3param3").build());
             Map<String, Object> scope = new HashMap<String, Object>();
@@ -700,7 +858,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testMaskSessionScopeWithDefaultMaskingChar() {
-            sut.initialize(new PropertyBuilder()
+            sut.initialize(new AppLogPropertyBuilder()
                     .beginOutputEnabled("true").beginFormat("[$sessionScope$]")
                     .maskingPatterns("param").build());
             Map<String, Object> scope = new HashMap<String, Object>();
@@ -719,7 +877,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatStatusCode() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$statusCode$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$statusCode$]").build());
             when(httpResponseMock.getStatusCode()).thenReturn(200);
 
             String actual = sut.formatEnd(logContext);
@@ -728,13 +887,28 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
+         * レスポンスが設定されていない場合、ステータスコードを空文字で出力する。
+         */
+        @Test
+        public void testStatusCodeIfEmpty() {
+            logContext.setResponse(null);
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$statusCode$]").build());
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
          * リクエスト処理終了時のメッセージに開始日時を出力できる。
          */
         @Test
         public void testEndFormatStartTime() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$startTime$]")
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$startTime$]")
                     .datePattern("yyyy/MM/dd").build());
-            long startTime = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
+            long startTime = new GregorianCalendar(2023, Calendar.JANUARY, 31).getTimeInMillis();
             logContext.setStartTime(startTime);
 
             String actual = sut.formatEnd(logContext);
@@ -747,8 +921,9 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatStartTimeWithDefaultFormat() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$startTime$]").build());
-            long startTime = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$startTime$]").build());
+            long startTime = new GregorianCalendar(2023, Calendar.JANUARY, 31, 9, 59, 0).getTimeInMillis();
             logContext.setStartTime(startTime);
 
             String actual = sut.formatEnd(logContext);
@@ -761,9 +936,10 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatEndTime() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$endTime$]")
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$endTime$]")
                     .datePattern("yyyy/MM/dd").build());
-            long endTime = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
+            long endTime = new GregorianCalendar(2023, Calendar.JANUARY, 31).getTimeInMillis();
             logContext.setEndTime(endTime);
 
             String actual = sut.formatEnd(logContext);
@@ -776,8 +952,9 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatEndTimeWithDefaultFormat() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$endTime$]").build());
-            long endTime = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$endTime$]").build());
+            long endTime = new GregorianCalendar(2023, Calendar.JANUARY, 31, 9, 59, 0).getTimeInMillis();
             logContext.setEndTime(endTime);
 
             String actual = sut.formatEnd(logContext);
@@ -790,10 +967,11 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatExecutionTime() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$executionTime$]").build());
-            long startTime = new GregorianCalendar(2023, 0, 1, 12, 0).getTimeInMillis();
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$executionTime$]").build());
+            long startTime = new GregorianCalendar(2023, Calendar.JANUARY, 1, 12, 0).getTimeInMillis();
             logContext.setStartTime(startTime);
-            long endTime = new GregorianCalendar(2023, 0, 1, 13, 0).getTimeInMillis();
+            long endTime = new GregorianCalendar(2023, Calendar.JANUARY, 1, 13, 0).getTimeInMillis();
             logContext.setEndTime(endTime);
 
             String actual = sut.formatEnd(logContext);
@@ -806,7 +984,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatMaxMemory() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$maxMemory$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$maxMemory$]").build());
             logContext.setMaxMemory(100);
 
             String actual = sut.formatEnd(logContext);
@@ -819,7 +998,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testEndFormatFreeMemory() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$freeMemory$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$freeMemory$]").build());
             logContext.setFreeMemory(200);
 
             String actual = sut.formatEnd(logContext);
@@ -832,10 +1012,12 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testBeginFormatRequestBody() throws Exception {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").beginFormat("[$requestBody$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$requestBody$]").build());
             String requestBody = "{\"id\":\"test\"}";
             when(servletRequestMock.getReader()).thenReturn(new BufferedReader(new StringReader(requestBody)));
             when(servletRequestMock.getContentLength()).thenReturn(requestBody.length());
+            when(httpRequestMock.getHeader("Content-Type")).thenReturn("application/json; charset=UTF-8");
 
             String actual = sut.formatBegin(logContext);
 
@@ -843,14 +1025,16 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
-         * リクエスト処理終了時のメッセージにレスポンスボディを出力できる。
+         * リクエスト処理終了時のメッセージにリクエストボディを出力できる。
          */
         @Test
-        public void testEndFormatResponseBody() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$responseBody$]").build());
-            String responseBody = "{\"id\":\"test\"}";
-            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
-            when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
+        public void testEndFormatRequestBody() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$requestBody$]").build());
+            String requestBody = "{\"id\":\"test\"}";
+            when(servletRequestMock.getReader()).thenReturn(new BufferedReader(new StringReader(requestBody)));
+            when(servletRequestMock.getContentLength()).thenReturn(requestBody.length());
+            when(httpRequestMock.getHeader("Content-Type")).thenReturn("application/json; charset=UTF-8");
 
             String actual = sut.formatEnd(logContext);
 
@@ -858,11 +1042,227 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
+         * リクエストボディが空の場合、空文字を出力する。
+         */
+        @Test
+        public void testRequestBodyIfEmpty() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$requestBody$]").build());
+            when(servletRequestMock.getContentLength()).thenReturn(0);
+            when(httpRequestMock.getHeader("Content-Type")).thenReturn("application/json; charset=UTF-8");
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
+         * リクエストボディの出力対象でないコンテンツタイプであれば、空文字を出力する。
+         */
+        @Test
+        public void testRequestBodyIfOtherContentType() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$requestBody$]").build());
+            String requestBody = "{\"id\":\"test\"}";
+            when(servletRequestMock.getReader()).thenReturn(new BufferedReader(new StringReader(requestBody)));
+            when(servletRequestMock.getContentLength()).thenReturn(requestBody.length());
+            when(httpRequestMock.getHeader("Content-Type")).thenReturn("text/html");
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
+         * リクエストのコンテンツタイプが設定されていなければ、空文字を出力する。
+         */
+        @Test
+        public void testRequestBodyIfNoContentType() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$requestBody$]").build());
+            String requestBody = "{\"id\":\"test\"}";
+            when(servletRequestMock.getReader()).thenReturn(new BufferedReader(new StringReader(requestBody)));
+            when(servletRequestMock.getContentLength()).thenReturn(requestBody.length());
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
+         * リクエストボディの出力判定クラスを変更している場合、変更後のクラスが適用される。
+         */
+        @Test
+        public void testRequestBodyIfChangeTargetMatcher() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$requestBody$]")
+                    .bodyLogTargetMatcher(MessageBodyLogTargetMatcherMock.class.getName()).build());
+            String requestBody = "{\"id\":\"test\"}";
+            when(servletRequestMock.getReader()).thenReturn(new BufferedReader(new StringReader(requestBody)));
+            when(servletRequestMock.getContentLength()).thenReturn(requestBody.length());
+            when(httpRequestMock.getHeader("Content-Type")).thenReturn("application/json; charset=UTF-8");
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
+         * リクエストボディのマスク処理フィルタを変更している場合、変更後のフィルタが適用される。
+         */
+        @Test
+        public void testRequestBodyIfChangeMaskingFilter() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$requestBody$]")
+                    .bodyMaskingFilter(MessageBodyMaskingFilterMock.class.getName()).build());
+            String requestBody = "{\"id\":\"test\"}";
+            when(servletRequestMock.getReader()).thenReturn(new BufferedReader(new StringReader(requestBody)));
+            when(servletRequestMock.getContentLength()).thenReturn(requestBody.length());
+            when(httpRequestMock.getHeader("Content-Type")).thenReturn("application/json; charset=UTF-8");
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[mock]"));
+        }
+
+        /**
+         * リクエストボディの読込でエラーが発生した場合、異常終了せず空文字を出力する。
+         */
+        @Test
+        public void testRequestBodyIfReadError() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$requestBody$]").build());
+            when(servletRequestMock.getReader()).thenThrow(new RuntimeException());
+            when(httpRequestMock.getHeader("Content-Type")).thenReturn("application/json; charset=UTF-8");
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
+         * リクエスト処理終了時のメッセージにレスポンスボディを出力できる。
+         */
+        @Test
+        public void testEndFormatResponseBody() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$responseBody$]").build());
+            String responseBody = "{\"id\":\"test\"}";
+            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
+            when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("[{\"id\":\"test\"}]"));
+        }
+
+        /**
+         * レスポンスボディが空の場合、空文字を出力する。
+         */
+        @Test
+        public void testResponseBodyIfEmpty() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$responseBody$]").build());
+            when(httpResponseMock.isBodyEmpty()).thenReturn(true);
+            when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
+         * レスポンスボディの出力対象でないコンテンツタイプであれば、空文字を出力する。
+         */
+        @Test
+        public void testResponseBodyIfOtherContentType() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$responseBody$]").build());
+            String responseBody = "{\"id\":\"test\"}";
+            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
+            when(httpResponseMock.getHeader("Content-Type")).thenReturn("text/xml");
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
+         * レスポンスのコンテンツタイプが設定されていなければ、空文字を出力する。
+         */
+        @Test
+        public void testResponseBodyIfNoContentType() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$responseBody$]").build());
+            String responseBody = "{\"id\":\"test\"}";
+            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
+         * レスポンスボディの出力判定クラスを変更している場合、変更後のクラスが適用される。
+         */
+        @Test
+        public void testResponseBodyIfChangeTargetMatcher() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$responseBody$]")
+                    .bodyLogTargetMatcher(MessageBodyLogTargetMatcherMock.class.getName()).build());
+            String responseBody = "{\"id\":\"test\"}";
+            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
+            when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
+         * レスポンスボディのマスク処理フィルタを変更している場合、変更後のフィルタが適用される。
+         */
+        @Test
+        public void testResponseBodyIfChangeMaskingFilter() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$responseBody$]")
+                    .bodyMaskingFilter(MessageBodyMaskingFilterMock.class.getName()).build());
+            String responseBody = "{\"id\":\"test\"}";
+            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
+            when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("[mock]"));
+        }
+
+        /**
+         * レスポンスボディの読込でエラーが発生した場合、異常終了せず空文字を出力する。
+         */
+        @Test
+        public void testResponseBodyIfReadError() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$responseBody$]").build());
+            when(httpResponseMock.getBodyStream()).thenThrow(new RuntimeException());
+            when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
+            when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("[]"));
+        }
+
+        /**
          * リクエスト処理開始時のフォーマットを指定していない場合、デフォルトフォーマットで出力する。
          */
         @Test
         public void testDefaultBeginFormat() {
-            sut.initialize(new PropertyBuilder().beginOutputEnabled("true").build());
+            sut.initialize(new AppLogPropertyBuilder().beginOutputEnabled("true").build());
 
             ThreadContext.setRequestId("testRequestId");
             ThreadContext.setUserId("testUserId");
@@ -893,7 +1293,7 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testDefaultEndFormat() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").build());
+            sut.initialize(new AppLogPropertyBuilder().endOutputEnabled("true").build());
 
             ThreadContext.setRequestId("testRequestId");
             ThreadContext.setUserId("testUserId");
@@ -905,9 +1305,9 @@ public class JaxRsAccessLogFormatterTest {
             when(servletRequestMock.getRequestURL()).thenReturn(new StringBuffer("http://localhost"));
             when(httpResponseMock.getStatusCode()).thenReturn(200);
 
-            long startTime = new GregorianCalendar(2023, 11, 31).getTimeInMillis();
+            long startTime = new GregorianCalendar(2023, Calendar.DECEMBER, 31).getTimeInMillis();
             logContext.setStartTime(startTime);
-            long endTime = new GregorianCalendar(2024, 0, 1).getTimeInMillis();
+            long endTime = new GregorianCalendar(2024, Calendar.JANUARY, 1).getTimeInMillis();
             logContext.setEndTime(endTime);
 
             logContext.setMaxMemory(999);
@@ -934,7 +1334,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testContainsMemoryItemIfMaxMemory() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$maxMemory$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$maxMemory$]").build());
 
             boolean actual = sut.containsMemoryItem();
 
@@ -946,7 +1347,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testContainsMemoryItemIfFreeMemory() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$freeMemory$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$freeMemory$]").build());
 
             boolean actual = sut.containsMemoryItem();
 
@@ -958,7 +1360,8 @@ public class JaxRsAccessLogFormatterTest {
          */
         @Test
         public void testContainsMemoryItemIfNothing() {
-            sut.initialize(new PropertyBuilder().endOutputEnabled("true").endFormat("[$requestId$]").build());
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endFormat("[$requestId$]").build());
 
             boolean actual = sut.containsMemoryItem();
 
@@ -966,60 +1369,4 @@ public class JaxRsAccessLogFormatterTest {
         }
     }
 
-    /**
-     * ログ出力プロパティ情報の作成補助。
-     */
-    private static class PropertyBuilder {
-
-        private final Map<String, String> props = new HashMap<String, String>();
-
-        public PropertyBuilder beginOutputEnabled(String value) {
-            props.put("jaxRsAccessLogFormatter.beginOutputEnabled", value);
-            return this;
-        }
-
-        public PropertyBuilder endOutputEnabled(String value) {
-            props.put("jaxRsAccessLogFormatter.endOutputEnabled", value);
-            return this;
-        }
-
-        public PropertyBuilder beginFormat(String value) {
-            props.put("jaxRsAccessLogFormatter.beginFormat", value);
-            return this;
-        }
-
-        public PropertyBuilder endFormat(String value) {
-            props.put("jaxRsAccessLogFormatter.endFormat", value);
-            return this;
-        }
-
-        public PropertyBuilder parametersSeparator(String value) {
-            props.put("jaxRsAccessLogFormatter.parametersSeparator", value);
-            return this;
-        }
-
-        public PropertyBuilder sessionScopeSeparator(String value) {
-            props.put("jaxRsAccessLogFormatter.sessionScopeSeparator", value);
-            return this;
-        }
-
-        public PropertyBuilder datePattern(String value) {
-            props.put("jaxRsAccessLogFormatter.datePattern", value);
-            return this;
-        }
-
-        public PropertyBuilder maskingChar(String value) {
-            props.put("jaxRsAccessLogFormatter.maskingChar", value);
-            return this;
-        }
-
-        public PropertyBuilder maskingPatterns(String value) {
-            props.put("jaxRsAccessLogFormatter.maskingPatterns", value);
-            return this;
-        }
-
-        public Map<String, String> build() {
-            return Collections.unmodifiableMap(props);
-        }
-    }
 }
