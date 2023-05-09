@@ -93,6 +93,9 @@ public class JaxRsBodyMaskingFilter implements LogContentMaskingFilter {
 
     @Override
     public String mask(String content) {
+        if (content.isEmpty()) {
+            return content;
+        }
         // JAX-RSのボディ形式としてJSONとXMLを扱っているが、現時点ではJSONのみ対応する
         if (content.startsWith("<?xml")) {
             return content;
