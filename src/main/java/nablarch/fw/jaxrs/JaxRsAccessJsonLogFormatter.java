@@ -233,9 +233,10 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
         objectBuilders.put(TARGET_NAME_MAX_MEMORY, new MaxMemoryBuilder());
         objectBuilders.put(TARGET_NAME_FREE_MEMORY, new FreeMemoryBuilder());
 
+        MessageBodyLogTargetMatcher bodyLogTargetMatcher = createBodyLogTargetMatcher(props);
         LogContentMaskingFilter bodyMaskingFilter = createBodyMaskingFilter(props);
-        objectBuilders.put(TARGET_NAME_REQUEST_BODY, new RequestBodyBuilder(bodyMaskingFilter));
-        objectBuilders.put(TARGET_NAME_RESPONSE_BODY, new ResponseBodyBuilder(bodyMaskingFilter));
+        objectBuilders.put(TARGET_NAME_REQUEST_BODY, new RequestBodyBuilder(bodyLogTargetMatcher, bodyMaskingFilter));
+        objectBuilders.put(TARGET_NAME_RESPONSE_BODY, new ResponseBodyBuilder(bodyLogTargetMatcher, bodyMaskingFilter));
 
         return objectBuilders;
     }
@@ -651,15 +652,20 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
      */
     public static class RequestBodyBuilder implements JsonLogObjectBuilder<JaxRsAccessLogContext> {
 
+        /** ログ出力対象判定 */
+        private final MessageBodyLogTargetMatcher logTargetMatcher;
+
         /** マスク処理フィルタ */
         private final LogContentMaskingFilter maskingFilter;
 
         /**
          * コンストラクタ
          *
+         * @param logTargetMatcher ログ出力対象判定
          * @param maskingFilter マスク処理フィルタ
          */
-        public RequestBodyBuilder(LogContentMaskingFilter maskingFilter) {
+        public RequestBodyBuilder(MessageBodyLogTargetMatcher logTargetMatcher, LogContentMaskingFilter maskingFilter) {
+            this.logTargetMatcher = logTargetMatcher;
             this.maskingFilter = maskingFilter;
         }
 
@@ -668,9 +674,12 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
          */
         @Override
         public void build(Map<String, Object> structuredObject, JaxRsAccessLogContext context) {
-            String content = readRequestBody(context);
-            structuredObject.put(TARGET_NAME_REQUEST_BODY,
-                    content.startsWith("<?xml") ? content : new JsonString(content));
+            if (logTargetMatcher.isTargetRequest(context.getRequest(), context.getContext())) {
+                String content = readRequestBody(context);
+                structuredObject.put(TARGET_NAME_REQUEST_BODY, isJsonString(content) ? new JsonString(content) : content);
+            } else {
+                structuredObject.put(TARGET_NAME_REQUEST_BODY, null);
+            }
         }
 
         /**
@@ -683,14 +692,32 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
             try {
                 String content = context.readRequestBody();
                 if (content.isEmpty()) {
-                    return content;
+                    // JSON形式で出力されるため空文字ではなくnullを返す
+                    return null;
                 }
                 return maskingFilter.mask(content);
             } catch (Throwable t) {
                 // 本処理に影響が無いようにログ出力のみ行う
                 LOGGER.logWarn("Failed to read Request Body", t);
-                return "";
+                return null;
             }
+        }
+
+        /**
+         * 指定の文字列がJSON文字列であるか判定する。
+         *
+         * @param content 文字列
+         * @return JSON文字列である場合は {@code true}
+         */
+        private boolean isJsonString(String content) {
+            if (content == null) {
+                return false;
+            }
+            String trimmed = content.trim();
+            if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+                return true;
+            }
+            return trimmed.startsWith("[") || trimmed.startsWith("]");
         }
     }
 
@@ -699,15 +726,20 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
      */
     public static class ResponseBodyBuilder implements JsonLogObjectBuilder<JaxRsAccessLogContext> {
 
+        /** ログ出力対象判定 */
+        private final MessageBodyLogTargetMatcher logTargetMatcher;
+
         /** マスク処理フィルタ */
         private final LogContentMaskingFilter maskingFilter;
 
         /**
          * コンストラクタ
          *
+         * @param logTargetMatcher ログ出力対象判定
          * @param maskingFilter マスク処理フィルタ
          */
-        public ResponseBodyBuilder(LogContentMaskingFilter maskingFilter) {
+        public ResponseBodyBuilder(MessageBodyLogTargetMatcher logTargetMatcher, LogContentMaskingFilter maskingFilter) {
+            this.logTargetMatcher = logTargetMatcher;
             this.maskingFilter = maskingFilter;
         }
 
@@ -716,10 +748,12 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
          */
         @Override
         public void build(Map<String, Object> structuredObject, JaxRsAccessLogContext context) {
-            String content = readResponseBody(context);
-            structuredObject.put(TARGET_NAME_RESPONSE_BODY,
-                    content.startsWith("<?xml") ? content : new JsonString(content));
-
+            if (logTargetMatcher.isTargetResponse(context.getRequest(), context.getResponse(), context.getContext())) {
+                String content = readResponseBody(context);
+                structuredObject.put(TARGET_NAME_RESPONSE_BODY, isJsonString(content) ? new JsonString(content) : content);
+            } else {
+                structuredObject.put(TARGET_NAME_RESPONSE_BODY, null);
+            }
         }
 
         /**
@@ -732,14 +766,32 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
             try {
                 String content = context.readResponseBody();
                 if (content.isEmpty()) {
-                    return content;
+                    // JSON形式で出力されるため空文字ではなくnullを返す
+                    return null;
                 }
                 return maskingFilter.mask(content);
             } catch (Throwable t) {
                 // 本処理に影響が無いようにログ出力のみ行う
                 LOGGER.logWarn("Failed to read Response Body", t);
-                return "";
+                return null;
             }
+        }
+
+        /**
+         * 指定の文字列がJSON文字列であるか判定する。
+         *
+         * @param content 文字列
+         * @return JSON文字列である場合は {@code true}
+         */
+        private boolean isJsonString(String content) {
+            if (content == null) {
+                return false;
+            }
+            String trimmed = content.trim();
+            if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+                return true;
+            }
+            return trimmed.startsWith("[") || trimmed.startsWith("]");
         }
     }
 }

@@ -114,6 +114,9 @@ public class JaxRsAccessLogFormatter {
     /** ボディ出力時のマスク処理を行うクラス名を取得する際に使用するプロパティ名 */
     private static final String PROPS_BODY_MASKING_FILTER = PROPS_PREFIX + "bodyMaskingFilter";
 
+    /** ボディ出力対象か判定するクラス名を取得する際に使用するプロパティ名 */
+    private static final String PROPS_BODY_LOG_TARGET_MATCHER = PROPS_PREFIX + "bodyLogTargetMatcher";
+
     /** 多値指定(カンマ区切り)のプロパティを分割する際に使用するパターン */
     private static final Pattern MULTIVALUE_SEPARATOR_PATTERN = Pattern.compile(",");
 
@@ -218,9 +221,10 @@ public class JaxRsAccessLogFormatter {
         logItems.put("$maxMemory$", new MaxMemoryItem());
         logItems.put("$freeMemory$", new FreeMemoryItem());
 
+        MessageBodyLogTargetMatcher bodyLogTargetMatcher = createBodyLogTargetMatcher(props);
         LogContentMaskingFilter bodyMaskingFilter = createBodyMaskingFilter(props);
-        logItems.put("$requestBody$", new RequestBodyItem(bodyMaskingFilter));
-        logItems.put("$responseBody$", new ResponseBodyItem(bodyMaskingFilter));
+        logItems.put("$requestBody$", new RequestBodyItem(bodyLogTargetMatcher, bodyMaskingFilter));
+        logItems.put("$responseBody$", new ResponseBodyItem(bodyLogTargetMatcher, bodyMaskingFilter));
 
         return logItems;
     }
@@ -241,6 +245,24 @@ public class JaxRsAccessLogFormatter {
         }
         maskingFilter.initialize(props);
         return maskingFilter;
+    }
+
+    /**
+     * ボディ出力対象であるか判定するMatcherを生成します。
+     *
+     * @param props 各種ログの設定情報
+     * @return Matcher
+     */
+    protected MessageBodyLogTargetMatcher createBodyLogTargetMatcher(Map<String, String> props) {
+        String bodyLogTargetMatcherClassName = props.get(PROPS_BODY_LOG_TARGET_MATCHER);
+        MessageBodyLogTargetMatcher bodyLogTargetMatcher;
+        if (bodyLogTargetMatcherClassName != null) {
+            bodyLogTargetMatcher = ObjectUtil.createInstance(bodyLogTargetMatcherClassName);
+        } else {
+            bodyLogTargetMatcher = new JaxRsBodyLogTargetMatcher();
+        }
+        bodyLogTargetMatcher.initialize(props);
+        return bodyLogTargetMatcher;
     }
 
     /**
@@ -969,31 +991,34 @@ public class JaxRsAccessLogFormatter {
      */
     public static class RequestBodyItem implements LogItem<JaxRsAccessLogContext> {
 
+        /** ログ出力対象判定 */
+        private final MessageBodyLogTargetMatcher logTargetMatcher;
+
         /** マスク処理フィルタ */
         private final LogContentMaskingFilter maskingFilter;
 
         /**
          * コンストラクタ
          *
+         * @param logTargetMatcher ログ出力対象判定
          * @param maskingFilter マスク処理フィルタ
          */
-        public RequestBodyItem(LogContentMaskingFilter maskingFilter) {
+        public RequestBodyItem(MessageBodyLogTargetMatcher logTargetMatcher, LogContentMaskingFilter maskingFilter) {
+            this.logTargetMatcher = logTargetMatcher;
             this.maskingFilter = maskingFilter;
         }
 
         @Override
         public String get(JaxRsAccessLogContext context) {
-            try {
-                String content = context.readRequestBody();
-                if (content.isEmpty()) {
-                    return content;
+            if (logTargetMatcher.isTargetRequest(context.getRequest(), context.getContext())) {
+                try {
+                    return maskingFilter.mask(context.readRequestBody());
+                } catch (Throwable t) {
+                    // 本処理に影響が無いようにログ出力のみ行う
+                    LOGGER.logWarn("Failed to read Request Body", t);
                 }
-                return maskingFilter.mask(content);
-            } catch (Throwable t) {
-                // 本処理に影響が無いようにログ出力のみ行う
-                LOGGER.logWarn("Failed to read Request Body", t);
-                return "";
             }
+            return "";
         }
     }
 
@@ -1002,31 +1027,34 @@ public class JaxRsAccessLogFormatter {
      */
     public static class ResponseBodyItem implements LogItem<JaxRsAccessLogContext> {
 
+        /** ログ出力対象判定 */
+        private final MessageBodyLogTargetMatcher logTargetMatcher;
+
         /** マスク処理フィルタ */
         private final LogContentMaskingFilter maskingFilter;
 
         /**
          * コンストラクタ
          *
+         * @param logTargetMatcher ログ出力対象判定
          * @param maskingFilter マスク処理フィルタ
          */
-        public ResponseBodyItem(LogContentMaskingFilter maskingFilter) {
+        public ResponseBodyItem(MessageBodyLogTargetMatcher logTargetMatcher, LogContentMaskingFilter maskingFilter) {
+            this.logTargetMatcher = logTargetMatcher;
             this.maskingFilter = maskingFilter;
         }
 
         @Override
         public String get(JaxRsAccessLogContext context) {
-            try {
-                String content = context.readResponseBody();
-                if (content.isEmpty()) {
-                    return content;
+            if (logTargetMatcher.isTargetResponse(context.getRequest(), context.getResponse(), context.getContext())) {
+                try {
+                    return maskingFilter.mask(context.readResponseBody());
+                } catch (Throwable t) {
+                    // 本処理に影響が無いようにログ出力のみ行う
+                    LOGGER.logWarn("Failed to read Response Body", t);
                 }
-                return maskingFilter.mask(content);
-            } catch (Throwable t) {
-                // 本処理に影響が無いようにログ出力のみ行う
-                LOGGER.logWarn("Failed to read Response Body", t);
-                return "";
             }
+            return "";
         }
     }
 }
