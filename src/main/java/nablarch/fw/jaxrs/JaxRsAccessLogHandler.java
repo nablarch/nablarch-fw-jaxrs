@@ -21,11 +21,13 @@ import java.util.Map;
  */
 public class JaxRsAccessLogHandler implements Handler<HttpRequest, HttpResponse> {
 
+    /** ロガー */
     private static final Logger LOGGER = LoggerManager.get("HTTP_ACCESS");
 
     /** 空のオプション情報 */
     private static final Object[] EMPTY_OPTIONS = new Object[0];
 
+    /** ログフォーマッター */
     private final JaxRsAccessLogFormatter logFormatter;
 
     /**
