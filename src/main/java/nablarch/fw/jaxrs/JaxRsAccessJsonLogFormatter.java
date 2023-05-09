@@ -13,7 +13,6 @@ import nablarch.core.text.json.JsonSerializationManager;
 import nablarch.core.text.json.JsonSerializationSettings;
 import nablarch.core.util.StringUtil;
 import nablarch.core.util.annotation.Published;
-import nablarch.fw.web.handler.HttpResponseUtil;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -518,21 +517,6 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
         public void build(Map<String, Object> structuredObject, JaxRsAccessLogContext context) {
             int statusCode = context.getStatusCode();
             structuredObject.put(TARGET_NAME_STATUS_CODE, statusCode != -1 ? statusCode : null);
-        }
-    }
-
-    /**
-     * クライアントへのレスポンスに使用するステータスコードを処理するクラス。
-     */
-    public static class ResponseStatusCodeBuilder implements JsonLogObjectBuilder<JaxRsAccessLogContext> {
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void build(Map<String, Object> structuredObject, JaxRsAccessLogContext context) {
-            int statusCode = HttpResponseUtil.chooseResponseStatusCode(context.getResponse(), context.getContext());
-            structuredObject.put(TARGET_NAME_RESPONSE_STATUS_CODE, statusCode != -1 ? statusCode : null);
         }
     }
 
