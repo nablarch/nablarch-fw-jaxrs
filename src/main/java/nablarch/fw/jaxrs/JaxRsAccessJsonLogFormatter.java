@@ -221,7 +221,6 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
         objectBuilders.put(TARGET_NAME_SESSION_ID, new SessionIdBuilder());
         objectBuilders.put(TARGET_NAME_SESSION_STORE_ID, new SessionStoreIdBuilder());
         objectBuilders.put(TARGET_NAME_STATUS_CODE, new StatusCodeBuilder());
-        objectBuilders.put(TARGET_NAME_RESPONSE_STATUS_CODE, new ResponseStatusCodeBuilder());
 
         objectBuilders.put(TARGET_NAME_CLIENT_IP_ADDRESS, new ClientIpAddressBuilder());
         objectBuilders.put(TARGET_NAME_CLIENT_HOST, new ClientHostBuilder());
