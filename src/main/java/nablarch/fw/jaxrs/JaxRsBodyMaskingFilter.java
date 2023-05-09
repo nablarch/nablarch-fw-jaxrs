@@ -25,9 +25,6 @@ public class JaxRsBodyMaskingFilter implements LogContentMaskingFilter {
 
     @Override
     public void initialize(Map<String, String> props) {
-        // リフレクションでインスタンス生成する想定だが、AppLogUtilは公開APIではないため、
-        // LogMaskingFilter実装クラスがコンストラクタから呼び出せる前提にはできない。
-        // そのため、取得済みのプロパティを初期化メソッドに渡してもらうようにしておく。
         maskingString = getMaskingString(props);
         maskingJsonPatterns = getMaskingJsonPatterns(props);
     }
@@ -40,7 +37,6 @@ public class JaxRsBodyMaskingFilter implements LogContentMaskingFilter {
      */
     protected String getMaskingString(Map<String, String> props) {
         char maskingChar = getMaskingChar(props);
-        // 既存のマスク機能では繰り返し回数が固定なので、それに合わせる
         return StringUtil.repeat(maskingChar, 5);
     }
 
