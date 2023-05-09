@@ -1,10 +1,13 @@
 package nablarch.fw.jaxrs;
 
+import nablarch.core.util.annotation.Published;
+
 import java.util.Map;
 
 /**
  * ログに出力する文字列をマスク処理するためのフィルタ。
  */
+@Published(tag = "architect")
 public interface LogContentMaskingFilter {
 
     /**
