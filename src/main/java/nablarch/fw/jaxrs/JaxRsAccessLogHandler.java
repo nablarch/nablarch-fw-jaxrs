@@ -83,7 +83,7 @@ public class JaxRsAccessLogHandler implements Handler<HttpRequest, HttpResponse>
      */
     protected JaxRsAccessLogFormatter createLogFormatter(Map<String, String> props) {
         String className = props.get(JaxRsAccessLogFormatter.PROPS_PREFIX + "className");
-        if (className == null || className.isEmpty()) {
+        if (className == null) {
             return new JaxRsAccessLogFormatter();
         }
         return ObjectUtil.createInstance(className);
