@@ -27,11 +27,17 @@ public class JaxRsBodyLogTargetMatcher implements MessageBodyLogTargetMatcher {
 
     @Override
     public boolean isTargetRequest(HttpRequest request, ExecutionContext context) {
+        if (request == null) {
+            return false;
+        }
         return isTargetContentType(request.getHeader("Content-Type"));
     }
 
     @Override
     public boolean isTargetResponse(HttpRequest request, HttpResponse response, ExecutionContext context) {
+        if (response == null) {
+            return false;
+        }
         return isTargetContentType(response.getHeader("Content-Type"));
     }
 
