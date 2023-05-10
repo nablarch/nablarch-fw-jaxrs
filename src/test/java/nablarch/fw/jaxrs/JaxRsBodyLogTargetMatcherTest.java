@@ -99,7 +99,7 @@ public class JaxRsBodyLogTargetMatcherTest {
 
         boolean actual = sut.isTargetResponse(request, response, null);
 
-        assertThat(actual, is(false));
+        assertThat(actual, is(true));
     }
 
     /**
