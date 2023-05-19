@@ -245,6 +245,8 @@ public class JaxRsAccessJsonLogFormatterTest {
             when(servletRequestMock.getRequestURL()).thenReturn(new StringBuffer("http://localhost"));
 
             String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("${\"url\":\"http://localhost\"}"));
         }
 
         /**
