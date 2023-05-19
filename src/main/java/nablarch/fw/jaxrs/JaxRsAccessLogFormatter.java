@@ -395,9 +395,6 @@ public class JaxRsAccessLogFormatter {
         /** 空きメモリ量(開始時) */
         private long freeMemory;
 
-        @SuppressWarnings("unchecked")
-        private static final Map<String, Object> EMPTY_MAP = Collections.EMPTY_MAP;
-
         /**
          * {@link nablarch.fw.ExecutionContext}を設定する。
          * @return {@link nablarch.fw.ExecutionContext}
@@ -421,10 +418,9 @@ public class JaxRsAccessLogFormatter {
          * 実行時例外が送出される。
          *
          * @return サーブレットリクエスト
-         * @throws ClassCastException
-         *     サーブレットコンテナ上で動作していない場合。
+         * @throws ClassCastException サーブレットコンテナ上で動作していない場合。
          */
-        public HttpServletRequest getServletRequest() throws ClassCastException {
+        public HttpServletRequest getServletRequest() {
             return context.getServletRequest();
         }
 
@@ -519,7 +515,7 @@ public class JaxRsAccessLogFormatter {
          * @return セッションスコープマップ
          */
         public Map<String, Object> getSessionScopeMap() {
-            return context.hasSession() ? context.getSessionScopeMap() : EMPTY_MAP;
+            return context.hasSession() ? context.getSessionScopeMap() : Collections.<String, Object>emptyMap();
         }
 
         /**
@@ -1012,10 +1008,11 @@ public class JaxRsAccessLogFormatter {
         public String get(JaxRsAccessLogContext context) {
             if (logTargetMatcher.isTargetRequest(context.getRequest(), context.getContext())) {
                 try {
-                    return maskingFilter.mask(context.readRequestBody());
-                } catch (Throwable t) {
+                    String content = context.readRequestBody();
+                    return maskingFilter.mask(content);
+                } catch (IOException e) {
                     // 本処理に影響が無いようにログ出力のみ行う
-                    LOGGER.logWarn("Failed to read Request Body", t);
+                    LOGGER.logWarn("Failed to read Request Body", e);
                 }
             }
             return "";
@@ -1048,10 +1045,11 @@ public class JaxRsAccessLogFormatter {
         public String get(JaxRsAccessLogContext context) {
             if (logTargetMatcher.isTargetResponse(context.getRequest(), context.getResponse(), context.getContext())) {
                 try {
-                    return maskingFilter.mask(context.readResponseBody());
-                } catch (Throwable t) {
+                    String content = context.readResponseBody();
+                    return maskingFilter.mask(content);
+                } catch (IOException e) {
                     // 本処理に影響が無いようにログ出力のみ行う
-                    LOGGER.logWarn("Failed to read Response Body", t);
+                    LOGGER.logWarn("Failed to read Response Body", e);
                 }
             }
             return "";

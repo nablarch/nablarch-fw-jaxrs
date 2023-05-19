@@ -13,8 +13,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.GregorianCalendar;
@@ -1110,7 +1113,13 @@ public class JaxRsAccessJsonLogFormatterTest {
             sut.initialize(new AppLogPropertyBuilder()
                     .beginOutputEnabled("true").beginTargets("requestBody")
                     .messagePrefix("$").build());
-            when(servletRequestMock.getReader()).thenThrow(new RuntimeException());
+            // thenThrowでは明示されていない検査例外を送出できないためthenAnswerで代替
+            when(servletRequestMock.getReader()).thenAnswer(new Answer<Object>() {
+                @Override
+                public Object answer(InvocationOnMock invocation) throws Throwable {
+                    throw new IOException();
+                }
+            });
             when(httpRequestMock.getHeader("Content-Type")).thenReturn("application/json; charset=UTF-8");
 
             String actual = sut.formatBegin(logContext);
@@ -1195,7 +1204,13 @@ public class JaxRsAccessJsonLogFormatterTest {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("responseBody")
                     .messagePrefix("$").build());
-            when(httpResponseMock.getBodyStream()).thenThrow(new RuntimeException());
+            // thenThrowでは明示されていない検査例外を送出できないためthenAnswerで代替
+            when(httpResponseMock.getBodyStream()).thenAnswer(new Answer<Object>() {
+                @Override
+                public Object answer(InvocationOnMock invocation) throws Throwable {
+                    throw new IOException();
+                }
+            });
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
 
             String actual = sut.formatEnd(logContext);
