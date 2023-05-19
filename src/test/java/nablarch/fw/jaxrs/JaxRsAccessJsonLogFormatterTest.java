@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.Charset;
+import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -859,7 +860,7 @@ public class JaxRsAccessJsonLogFormatterTest {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("startTime").messagePrefix("$")
                     .datePattern("yyyy/MM/dd").build());
-            long startTime = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
+            long startTime = new GregorianCalendar(2023, Calendar.JANUARY, 31).getTimeInMillis();
             logContext.setStartTime(startTime);
 
             String actual = sut.formatEnd(logContext);
@@ -875,7 +876,7 @@ public class JaxRsAccessJsonLogFormatterTest {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("startTime")
                     .messagePrefix("$").build());
-            long startTime = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
+            long startTime = new GregorianCalendar(2023, Calendar.JANUARY, 31, 9, 59, 0).getTimeInMillis();
             logContext.setStartTime(startTime);
 
             String actual = sut.formatEnd(logContext);
@@ -891,7 +892,7 @@ public class JaxRsAccessJsonLogFormatterTest {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("endTime").messagePrefix("$")
                     .datePattern("yyyy/MM/dd").build());
-            long endTime = new GregorianCalendar(2023, 0, 31).getTimeInMillis();
+            long endTime = new GregorianCalendar(2023, Calendar.JANUARY, 31).getTimeInMillis();
             logContext.setEndTime(endTime);
 
             String actual = sut.formatEnd(logContext);
@@ -907,7 +908,7 @@ public class JaxRsAccessJsonLogFormatterTest {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("endTime")
                     .messagePrefix("$").build());
-            long endTime = new GregorianCalendar(2023, 0, 31, 9, 59, 0).getTimeInMillis();
+            long endTime = new GregorianCalendar(2023, Calendar.JANUARY, 31, 9, 59, 0).getTimeInMillis();
             logContext.setEndTime(endTime);
 
             String actual = sut.formatEnd(logContext);
@@ -924,9 +925,9 @@ public class JaxRsAccessJsonLogFormatterTest {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("executionTime")
                     .messagePrefix("$").build());
-            long startTime = new GregorianCalendar(2023, 0, 1, 12, 0).getTimeInMillis();
+            long startTime = new GregorianCalendar(2023, Calendar.JANUARY, 1, 12, 0).getTimeInMillis();
             logContext.setStartTime(startTime);
-            long endTime = new GregorianCalendar(2023, 0, 1, 13, 0).getTimeInMillis();
+            long endTime = new GregorianCalendar(2023, Calendar.JANUARY, 1, 13, 0).getTimeInMillis();
             logContext.setEndTime(endTime);
 
             String actual = sut.formatEnd(logContext);
@@ -1167,7 +1168,7 @@ public class JaxRsAccessJsonLogFormatterTest {
          * レスポンスボディの出力対象でないコンテンツタイプであれば、レスポンスボディを出力しない。
          */
         @Test
-        public void testResponseBodyIfOtherContentType() throws Exception {
+        public void testResponseBodyIfOtherContentType() {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("responseBody")
                     .messagePrefix("$").build());
@@ -1185,7 +1186,7 @@ public class JaxRsAccessJsonLogFormatterTest {
          * レスポンスのコンテンツタイプが設定されていなければ、レスポンスボディを出力しない。
          */
         @Test
-        public void testResponseBodyIfNoContentType() throws Exception {
+        public void testResponseBodyIfNoContentType() {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("responseBody")
                     .messagePrefix("$").build());
@@ -1202,7 +1203,7 @@ public class JaxRsAccessJsonLogFormatterTest {
          * レスポンスボディの読込でエラーが発生した場合、異常終了せずレスポンスボディを出力しない。
          */
         @Test
-        public void testResponseBodyIfReadError() throws Exception {
+        public void testResponseBodyIfReadError() {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("responseBody")
                     .messagePrefix("$").build());
