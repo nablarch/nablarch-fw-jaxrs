@@ -694,11 +694,7 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
             if (content == null) {
                 return false;
             }
-            String trimmed = content.trim();
-            if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-                return true;
-            }
-            return trimmed.startsWith("[") && trimmed.endsWith("]");
+            return content.trim().matches("^[{\\[].*[}\\]]$");
         }
     }
 
@@ -768,11 +764,7 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
             if (content == null) {
                 return false;
             }
-            String trimmed = content.trim();
-            if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-                return true;
-            }
-            return trimmed.startsWith("[") && trimmed.endsWith("]");
+            return content.trim().matches("^[{\\[].*[}\\]]$");
         }
     }
 }
