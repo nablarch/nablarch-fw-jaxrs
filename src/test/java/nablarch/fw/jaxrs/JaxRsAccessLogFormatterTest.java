@@ -785,6 +785,21 @@ public class JaxRsAccessLogFormatterTest {
         }
 
         /**
+         * セッションが作成されていなければ、空表現を出力する。
+         */
+        @Test
+        public void testSessionScopeIfDisabled() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginFormat("[$sessionScope$]")
+                    .sessionScopeSeparator("@").build());
+            when(executionContextMock.hasSession()).thenReturn(false);
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("[{}]"));
+        }
+
+        /**
          * セッションスコープ情報のセパレータが未設定の場合、デフォルトセパレータで出力する。
          */
         @Test
@@ -1142,6 +1157,7 @@ public class JaxRsAccessLogFormatterTest {
                     throw new IOException();
                 }
             });
+            when(servletRequestMock.getContentLength()).thenReturn(1);
             when(httpRequestMock.getHeader("Content-Type")).thenReturn("application/json; charset=UTF-8");
 
             String actual = sut.formatBegin(logContext);
