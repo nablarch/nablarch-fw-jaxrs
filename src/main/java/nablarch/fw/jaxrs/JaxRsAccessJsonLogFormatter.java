@@ -698,7 +698,7 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
             if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
                 return true;
             }
-            return trimmed.startsWith("[") || trimmed.startsWith("]");
+            return trimmed.startsWith("[") && trimmed.endsWith("]");
         }
     }
 
@@ -772,7 +772,7 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
             if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
                 return true;
             }
-            return trimmed.startsWith("[") || trimmed.startsWith("]");
+            return trimmed.startsWith("[") && trimmed.endsWith("]");
         }
     }
 }
