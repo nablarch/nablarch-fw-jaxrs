@@ -1058,6 +1058,24 @@ public class JaxRsAccessJsonLogFormatterTest {
         }
 
         /**
+         * リクエストボディのルート要素が配列のJSON文字列の場合、リクエストボディを出力できる。
+         */
+        @Test
+        public void testRequestBodyIfJsonArray() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginTargets("requestBody")
+                    .messagePrefix("$").build());
+            String requestBody = "[{\"id\":\"test\"},{\"id\":\"test\"}]";
+            when(servletRequestMock.getReader()).thenReturn(new BufferedReader(new StringReader(requestBody)));
+            when(servletRequestMock.getContentLength()).thenReturn(requestBody.length());
+            when(httpRequestMock.getHeader("Content-Type")).thenReturn("application/json; charset=UTF-8");
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("${\"requestBody\":[{\"id\":\"test\"},{\"id\":\"test\"}]}"));
+        }
+
+        /**
          * リクエストボディが空の場合、リクエストボディを出力しない。
          */
         @Test
@@ -1092,6 +1110,24 @@ public class JaxRsAccessJsonLogFormatterTest {
         }
 
         /**
+         * リクエストボディがJSON形式の文字列でなければ、文字列として出力する。
+         */
+        @Test
+        public void testRequestBodyIfDisabledFormat() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginTargets("requestBody")
+                    .messagePrefix("$").build());
+            String requestBody = "({\"id\":\"test\"})";
+            when(servletRequestMock.getReader()).thenReturn(new BufferedReader(new StringReader(requestBody)));
+            when(servletRequestMock.getContentLength()).thenReturn(requestBody.length());
+            when(httpRequestMock.getHeader("Content-Type")).thenReturn("application/json; charset=UTF-8");
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("${\"requestBody\":\"({\\\"id\\\":\\\"test\\\"})\"}"));
+        }
+
+        /**
          * リクエストのコンテンツタイプが設定されていなければ、リクエストボディを出力しない。
          */
         @Test
@@ -1123,6 +1159,7 @@ public class JaxRsAccessJsonLogFormatterTest {
                     throw new IOException();
                 }
             });
+            when(servletRequestMock.getContentLength()).thenReturn(1);
             when(httpRequestMock.getHeader("Content-Type")).thenReturn("application/json; charset=UTF-8");
 
             String actual = sut.formatBegin(logContext);
@@ -1146,6 +1183,24 @@ public class JaxRsAccessJsonLogFormatterTest {
             String actual = sut.formatEnd(logContext);
 
             assertThat(actual, is("${\"responseBody\":{\"id\":\"test\"}}"));
+        }
+
+        /**
+         * レスポンスボディのルート要素が配列のJSON文字列の場合、レスポンスボディを出力できる。
+         */
+        @Test
+        public void testResponseBodyIfJsonArray() throws Exception {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endTargets("responseBody")
+                    .messagePrefix("$").build());
+            String responseBody = "[{\"id\":\"test\"},{\"id\":\"test\"}]";
+            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
+            when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("${\"responseBody\":[{\"id\":\"test\"},{\"id\":\"test\"}]}"));
         }
 
         /**
@@ -1200,6 +1255,24 @@ public class JaxRsAccessJsonLogFormatterTest {
         }
 
         /**
+         * レスポンスボディがJSON形式の文字列でなければ、文字列として出力する。
+         */
+        @Test
+        public void testResponseBodyIfDisabledFormat() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endTargets("responseBody")
+                    .messagePrefix("$").build());
+            String responseBody = "({\"id\":\"test\"})";
+            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
+            when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("${\"responseBody\":\"({\\\"id\\\":\\\"test\\\"})\"}"));
+        }
+
+        /**
          * レスポンスボディの読込でエラーが発生した場合、異常終了せずレスポンスボディを出力しない。
          */
         @Test
@@ -1215,10 +1288,35 @@ public class JaxRsAccessJsonLogFormatterTest {
                 }
             });
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
+            when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
 
             String actual = sut.formatEnd(logContext);
 
             assertThat(actual, is("${}"));
+        }
+
+        /**
+         * リクエスト処理開始時のメッセージに未定義の項目があれば例外を送出する。
+         */
+        @Test(expected = IllegalArgumentException.class)
+        public void testBeginFormatIfUnknownItem() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginTargets("hoge")
+                    .messagePrefix("$").build());
+
+            sut.formatBegin(logContext);
+        }
+
+        /**
+         * リクエスト処理終了時のメッセージに未定義の項目があれば例外を送出する。
+         */
+        @Test(expected = IllegalArgumentException.class)
+        public void testEndFormatIfUnknownItem() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endTargets("hoge")
+                    .messagePrefix("$").build());
+
+            sut.formatEnd(logContext);
         }
     }
 
