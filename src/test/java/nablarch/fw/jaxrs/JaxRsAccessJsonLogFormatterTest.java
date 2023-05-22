@@ -1296,6 +1296,30 @@ public class JaxRsAccessJsonLogFormatterTest {
         }
 
         /**
+         * リクエスト処理開始時のメッセージに未定義の項目があれば例外を送出する。
+         */
+        @Test(expected = IllegalArgumentException.class)
+        public void testBeginFormatIfUnknownItem() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginTargets("hoge")
+                    .messagePrefix("$").build());
+
+            sut.formatBegin(logContext);
+        }
+
+        /**
+         * リクエスト処理終了時のメッセージに未定義の項目があれば例外を送出する。
+         */
+        @Test(expected = IllegalArgumentException.class)
+        public void testEndFormatIfUnknownItem() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endTargets("hoge")
+                    .messagePrefix("$").build());
+
+            sut.formatEnd(logContext);
+        }
+
+        /**
          * リクエスト処理開始時のメッセージに項目が重複している場合、重複分を削除して出力できる。
          */
         @Test
