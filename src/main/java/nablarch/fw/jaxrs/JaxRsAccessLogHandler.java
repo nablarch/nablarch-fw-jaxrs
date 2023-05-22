@@ -47,7 +47,8 @@ public class JaxRsAccessLogHandler implements Handler<HttpRequest, HttpResponse>
      * @return 次のハンドラの処理結果
      * @throws ClassCastException context の型が {@link ServletExecutionContext} でない場合。
      */
-    public HttpResponse handle(HttpRequest request, ExecutionContext context) throws ClassCastException {
+    @Override
+    public HttpResponse handle(HttpRequest request, ExecutionContext context) {
         JaxRsAccessLogContext logContext = logFormatter.createAccessLogContext();
         logContext.setContext((ServletExecutionContext) context);
         logContext.setRequest(request);

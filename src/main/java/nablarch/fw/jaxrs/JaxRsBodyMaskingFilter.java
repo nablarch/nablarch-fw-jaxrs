@@ -51,10 +51,10 @@ public class JaxRsBodyMaskingFilter implements LogContentMaskingFilter {
         if (value == null) {
             return '*';
         }
-        if (value.length() > 1) {{
+        if (value.length() > 1) {
             throw new IllegalArgumentException(
                     String.format("maskingChar was not char type. maskingChar = [%s]", value));
-        }}
+        }
         return value.charAt(0);
     }
 

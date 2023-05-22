@@ -14,6 +14,7 @@ import nablarch.core.text.json.JsonSerializationSettings;
 import nablarch.core.util.StringUtil;
 import nablarch.core.util.annotation.Published;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -69,9 +70,6 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
 
     /** ステータスコードの項目名 */
     private static final String TARGET_NAME_STATUS_CODE = "statusCode";
-
-    /** クライアントへのレスポンスに使用するステータスコードの項目名 */
-    private static final String TARGET_NAME_RESPONSE_STATUS_CODE = "responseStatusCode";
 
     /** クライアント端末IPアドレスの項目名 */
     private static final String TARGET_NAME_CLIENT_IP_ADDRESS = "clientIpAddress";
@@ -679,9 +677,9 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
                     return null;
                 }
                 return maskingFilter.mask(content);
-            } catch (Throwable t) {
+            } catch (IOException e) {
                 // 本処理に影響が無いようにログ出力のみ行う
-                LOGGER.logWarn("Failed to read Request Body", t);
+                LOGGER.logWarn("Failed to read Request Body", e);
                 return null;
             }
         }
@@ -753,9 +751,9 @@ public class JaxRsAccessJsonLogFormatter extends JaxRsAccessLogFormatter {
                     return null;
                 }
                 return maskingFilter.mask(content);
-            } catch (Throwable t) {
+            } catch (IOException e) {
                 // 本処理に影響が無いようにログ出力のみ行う
-                LOGGER.logWarn("Failed to read Response Body", t);
+                LOGGER.logWarn("Failed to read Response Body", e);
                 return null;
             }
         }
