@@ -1318,6 +1318,88 @@ public class JaxRsAccessJsonLogFormatterTest {
 
             sut.formatEnd(logContext);
         }
+
+        /**
+         * リクエスト処理開始時のメッセージに項目が重複している場合、重複分を削除して出力できる。
+         */
+        @Test
+        public void testBeginFormatIfDuplicatedTarget() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginTargets("requestId,requestId")
+                    .messagePrefix("$").build());
+            ThreadContext.setRequestId("test");
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("${\"requestId\":\"test\"}"));
+        }
+
+        /**
+         * リクエスト処理終了時のメッセージに項目が重複している場合、重複分を削除して出力できる。
+         */
+        @Test
+        public void testEndFormatIfDuplicatedTarget() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endTargets("requestId,requestId")
+                    .messagePrefix("$").build());
+            ThreadContext.setRequestId("test");
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("${\"requestId\":\"test\"}"));
+        }
+
+        /**
+         * リクエスト処理開始時のメッセージに項目名が指定されていない場合、出力されない。
+         */
+        @Test
+        public void testBeginFormatIfEmptyTarget() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginTargets(", ")
+                    .messagePrefix("$").build());
+
+            String actual = sut.formatBegin(logContext);
+
+            assertThat(actual, is("${}"));
+        }
+
+        /**
+         * リクエスト処理終了時のメッセージに項目名が指定されていない場合、出力されない。
+         */
+        @Test
+        public void testEndFormatIfEmptyTarget() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled(  "true").endTargets(", ")
+                    .messagePrefix("$").build());
+
+            String actual = sut.formatEnd(logContext);
+
+            assertThat(actual, is("${}"));
+        }
+
+        /**
+         * リクエスト処理開始時のメッセージに未定義の項目があれば例外を送出する。
+         */
+        @Test(expected = IllegalArgumentException.class)
+        public void testBeginFormatIfUnknownTarget() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .beginOutputEnabled("true").beginTargets("hoge")
+                    .messagePrefix("$").build());
+
+            sut.formatBegin(logContext);
+        }
+
+        /**
+         * リクエスト処理終了時のメッセージに未定義の項目があれば例外を送出する。
+         */
+        @Test(expected = IllegalArgumentException.class)
+        public void testEndFormatIfUnknownTarget() {
+            sut.initialize(new AppLogPropertyBuilder()
+                    .endOutputEnabled("true").endTargets("hoge")
+                    .messagePrefix("$").build());
+
+            sut.formatEnd(logContext);
+        }
     }
 
     public static class ContainsMemoryItem {
