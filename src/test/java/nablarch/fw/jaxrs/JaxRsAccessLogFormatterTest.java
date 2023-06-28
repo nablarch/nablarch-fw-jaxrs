@@ -1,6 +1,5 @@
 package nablarch.fw.jaxrs;
 
-import com.sun.xml.bind.StringInputStream;
 import nablarch.core.ThreadContext;
 import nablarch.fw.jaxrs.JaxRsAccessLogFormatter.JaxRsAccessLogContext;
 import nablarch.fw.web.HttpRequest;
@@ -17,6 +16,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.Charset;
@@ -1169,11 +1169,11 @@ public class JaxRsAccessLogFormatterTest {
          * リクエスト処理終了時のメッセージにレスポンスボディを出力できる。
          */
         @Test
-        public void testEndFormatResponseBody() {
+        public void testEndFormatResponseBody() throws Exception {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endFormat("[$responseBody$]").build());
             String responseBody = "{\"id\":\"test\"}";
-            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getBodyStream()).thenReturn(new ByteArrayInputStream(responseBody.getBytes("UTF-8")));
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
             when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
 
@@ -1205,7 +1205,7 @@ public class JaxRsAccessLogFormatterTest {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endFormat("[$responseBody$]").build());
             String responseBody = "{\"id\":\"test\"}";
-            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getBodyStream()).thenReturn(new ByteArrayInputStream(responseBody.getBytes()));
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
             when(httpResponseMock.getHeader("Content-Type")).thenReturn("text/xml");
 
@@ -1222,7 +1222,7 @@ public class JaxRsAccessLogFormatterTest {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endFormat("[$responseBody$]").build());
             String responseBody = "{\"id\":\"test\"}";
-            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getBodyStream()).thenReturn(new ByteArrayInputStream(responseBody.getBytes("UTF-8")));
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
 
             String actual = sut.formatEnd(logContext);
@@ -1239,7 +1239,7 @@ public class JaxRsAccessLogFormatterTest {
                     .endOutputEnabled("true").endFormat("[$responseBody$]")
                     .bodyLogTargetMatcher(MessageBodyLogTargetMatcherMock.class.getName()).build());
             String responseBody = "{\"id\":\"test\"}";
-            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getBodyStream()).thenReturn(new ByteArrayInputStream(responseBody.getBytes("UTF-8")));
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
             when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
 
@@ -1257,7 +1257,7 @@ public class JaxRsAccessLogFormatterTest {
                     .endOutputEnabled("true").endFormat("[$responseBody$]")
                     .bodyMaskingFilter(MessageBodyMaskingFilterMock.class.getName()).build());
             String responseBody = "{\"id\":\"test\"}";
-            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getBodyStream()).thenReturn(new ByteArrayInputStream(responseBody.getBytes("UTF-8")));
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
             when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
 

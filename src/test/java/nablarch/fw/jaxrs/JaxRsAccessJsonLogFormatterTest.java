@@ -1,6 +1,5 @@
 package nablarch.fw.jaxrs;
 
-import com.sun.xml.bind.StringInputStream;
 import nablarch.core.ThreadContext;
 import nablarch.fw.jaxrs.JaxRsAccessLogFormatter.JaxRsAccessLogContext;
 import nablarch.fw.web.HttpRequest;
@@ -17,6 +16,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.Charset;
@@ -1171,12 +1171,12 @@ public class JaxRsAccessJsonLogFormatterTest {
          * リクエスト処理終了時のメッセージにレスポンスボディを出力できる。
          */
         @Test
-        public void testEndFormatResponseBody() {
+        public void testEndFormatResponseBody() throws Exception {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("responseBody")
                     .messagePrefix("$").build());
             String responseBody = "{\"id\":\"test\"}";
-            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getBodyStream()).thenReturn(new ByteArrayInputStream(responseBody.getBytes("UTF-8")));
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
             when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
 
@@ -1194,7 +1194,7 @@ public class JaxRsAccessJsonLogFormatterTest {
                     .endOutputEnabled("true").endTargets("responseBody")
                     .messagePrefix("$").build());
             String responseBody = "[{\"id\":\"test\"},{\"id\":\"test\"}]";
-            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getBodyStream()).thenReturn(new ByteArrayInputStream(responseBody.getBytes("UTF-8")));
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
             when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
 
@@ -1223,12 +1223,12 @@ public class JaxRsAccessJsonLogFormatterTest {
          * レスポンスボディの出力対象でないコンテンツタイプであれば、レスポンスボディを出力しない。
          */
         @Test
-        public void testResponseBodyIfOtherContentType() {
+        public void testResponseBodyIfOtherContentType() throws Exception {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("responseBody")
                     .messagePrefix("$").build());
             String responseBody = "{\"id\":\"test\"}";
-            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getBodyStream()).thenReturn(new ByteArrayInputStream(responseBody.getBytes("UTF-8")));
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
             when(httpResponseMock.getHeader("Content-Type")).thenReturn("text/html");
 
@@ -1241,12 +1241,12 @@ public class JaxRsAccessJsonLogFormatterTest {
          * レスポンスのコンテンツタイプが設定されていなければ、レスポンスボディを出力しない。
          */
         @Test
-        public void testResponseBodyIfNoContentType() {
+        public void testResponseBodyIfNoContentType() throws Exception {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("responseBody")
                     .messagePrefix("$").build());
             String responseBody = "{\"id\":\"test\"}";
-            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getBodyStream()).thenReturn(new ByteArrayInputStream(responseBody.getBytes("UTF-8")));
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
 
             String actual = sut.formatEnd(logContext);
@@ -1258,12 +1258,12 @@ public class JaxRsAccessJsonLogFormatterTest {
          * レスポンスボディがJSON形式の文字列でなければ、文字列として出力する。
          */
         @Test
-        public void testResponseBodyIfDisabledFormat() {
+        public void testResponseBodyIfDisabledFormat() throws Exception {
             sut.initialize(new AppLogPropertyBuilder()
                     .endOutputEnabled("true").endTargets("responseBody")
                     .messagePrefix("$").build());
             String responseBody = "({\"id\":\"test\"})";
-            when(httpResponseMock.getBodyStream()).thenReturn(new StringInputStream(responseBody));
+            when(httpResponseMock.getBodyStream()).thenReturn(new ByteArrayInputStream(responseBody.getBytes("UTF-8")));
             when(httpResponseMock.getCharset()).thenReturn(Charset.forName("UTF-8"));
             when(httpResponseMock.getHeader("Content-Type")).thenReturn("application/json");
 
