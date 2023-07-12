@@ -37,11 +37,9 @@ import nablarch.fw.jaxrs.integration.app.IntegrationTestResource;
 import nablarch.fw.jaxrs.integration.app.Person;
 import nablarch.fw.jaxrs.integration.app.Persons;
 
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -59,35 +57,17 @@ public class JaxRsIntegrationTest {
 
     @Deployment
     public static WebArchive createDeployment() {
-        WebArchive archive;
-        try {
-            archive = ShrinkWrap.create(WebArchive.class)
-                    .addPackage("nablarch.fw.jaxrs.integration.app")
-                    .addPackage("nablarch.fw.jaxrs")
-                    .addAsResource(new File("src/test/resources/integration/integration-log.properties"), "log.properties")
-                    .addAsResource(new File("src/test/resources/app-log.properties"))
-                    .addAsLibraries(
-                            Maven.configureResolver()
-                                    .workOffline()
-                                    .loadPomFromFile("pom.xml")
-                                    .importCompileAndRuntimeDependencies()
-                                    .importTestDependencies()
-                                    .resolve()
-                                    .withTransitivity()
-                                    .asFile()
-                    )
-                    .setWebXML(new File("src/test/webapp/WEB-INF/web.xml"));
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
+        WebArchive archive = ShrinkWrap.create(WebArchive.class)
+                .addPackage("nablarch.fw.jaxrs.integration.app")
+                .addAsResource(new File("src/test/resources/integration/integration-log.properties"), "log.properties")
+                .addAsResource(new File("src/test/resources/app-log.properties"))
+                .setWebXML(new File("src/test/webapp/WEB-INF/web.xml"));
 
         for (File file : new File("src/test/resources/integration").listFiles()) {
             if (file.getName().endsWith(".xml")) {
                 archive.addAsResource(file);
             }
         }
-        System.out.println(archive.toString(true));
         return archive;
     }
 
@@ -486,18 +466,9 @@ public class JaxRsIntegrationTest {
         assertLogContains("GET", "action/error/notexist", " status code=[404]");
     }
 
-    // このテストケースは、コンテナに WildFly を使った場合は成功しないため除外対象としている。
-    // もともとコンテナには GlassFish が使われていたためテストは通っていた。
-    // しかし、 Jakarta EE 10 対応を行った 2023年1月現在、 EE 10 に対応した GlassFish 7 は
-    // Arquillian で使用できないため、代替としてコンテナに WildFly を使用している。
-    // WildFly では :controller, :action は利用できない(解説書参照)。
-    // このため、本テストケースはコメントアウトしている。
-    // 将来、 GlassFish 7 が Arquillian で利用できるようになった場合など、
-    // このテストケースを通すことができる条件が整った場合はIgnoreを外すこと。
     /**
      * ルーティングで":controller"と":action"を使えること。
      */
-    @Ignore("WildFly では動作しないので除外")
     @Test
     @RunAsClient
     public void testControllerActionRouting() throws Exception {
@@ -803,4 +774,3 @@ public class JaxRsIntegrationTest {
         }
     }
 }
-
