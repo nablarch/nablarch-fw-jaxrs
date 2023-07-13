@@ -3,8 +3,6 @@ package nablarch.fw.jaxrs;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
 import org.junit.Test;
 
 import javax.validation.Valid;
@@ -47,6 +45,9 @@ public class JaxRsContextTest {
         assertThat(JaxRsContext.get(context), is(jaxRsContext));
     }
 
+    /**
+     * リクエストメソッドの引数の型の設定/取得ができること
+     */
     @Test
     public void getRequestClass() throws Exception {
         JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
@@ -62,6 +63,9 @@ public class JaxRsContextTest {
         assertThat(jaxRsContext.getRequestClass(), typeCompatibleWith(TestBean2.class));
     }
 
+    /**
+     * Consumesメディアタイプの設定/取得ができること
+     */
     @Test
     public void getConsumesMediaType() throws Exception {
 
@@ -75,6 +79,9 @@ public class JaxRsContextTest {
         assertThat(jaxRsContext.getConsumesMediaType(), is("application/xml"));
     }
 
+    /**
+     * Producesメディアタイプの設定/取得ができること
+     */
     @Test
     public void getProducesMediaType() throws Exception {
 
@@ -88,12 +95,39 @@ public class JaxRsContextTest {
         assertThat(jaxRsContext.getProducesMediaType(), is("application/json"));
     }
 
+    /**
+     * リクエストメソッドに{@link Valid}アノテーションが設定されているか判定できること。
+     */
     @Test
-    public void getValidationAnnotation() throws Exception {
+    public void checkValidAnnotation() throws Exception {
 
         JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
         assertThat(jaxRsContext.hasValidAnnotation(), is(false));
+
+        jaxRsContext = new JaxRsContext(TestAction.class.getMethod("validAndConvertGroups"));
+        assertThat(jaxRsContext.hasValidAnnotation(), is(true));
+    }
+
+    /**
+     * リクエストメソッドに{@link ConvertGroup}アノテーションが設定されているか判定できること。
+     */
+    @Test
+    public void checkConvertGroupAnnotation() throws Exception {
+
+        JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
         assertThat(jaxRsContext.hasConvertGroupAnnotation(), is(false));
+
+        jaxRsContext = new JaxRsContext(TestAction.class.getMethod("validAndConvertGroups"));
+        assertThat(jaxRsContext.hasConvertGroupAnnotation(), is(true));
+    }
+
+    /**
+     * リクエストメソッド設定した{@link ConvertGroup}アノテーションから、{@code to}属性が取得できること
+     */
+    @Test
+    public void getToAttributeOfConvertGroupAnnotation() throws Exception {
+
+        JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
         try {
             jaxRsContext.getToAttributesOfConvertGroupAnnotation();
             fail("IllegalStateExceptionが送出されるはず");
@@ -102,46 +136,8 @@ public class JaxRsContextTest {
         }
 
         jaxRsContext = new JaxRsContext(TestAction.class.getMethod("validAndConvertGroups"));
-        assertThat(jaxRsContext.hasValidAnnotation(), is(true));
-        assertThat(jaxRsContext.hasConvertGroupAnnotation(), is(true));
-        assertThat(jaxRsContext.getToAttributesOfConvertGroupAnnotation(), ClassMatcher.isClassOf(TestAction.Test1.class));
+        assertThat(jaxRsContext.getToAttributesOfConvertGroupAnnotation(), typeCompatibleWith(TestAction.Test1.class));
     }
-
-    private static class ClassMatcher extends BaseMatcher<Class<?>> {
-
-        private final Class<?> expected;
-        private Class<?> actual;
-
-        private ClassMatcher(Class<?> expected) {
-            this.expected = expected;
-        }
-
-        @Override
-        public boolean matches(Object actual) {
-
-            if (!(actual instanceof Class<?>)) {
-                return false;
-            }
-
-            this.actual = (Class<?>)actual;
-
-            return this.actual.equals(this.expected);
-
-        }
-
-        @Override
-        public void describeTo(Description description) {
-            description.appendText("is  ");
-            description.appendValue(expected);
-        }
-
-        public static ClassMatcher isClassOf(Class<?> clazz) {
-            return new ClassMatcher(clazz);
-        }
-
-    }
-
-
 
     public static class TestAction {
 
