@@ -3,8 +3,13 @@ package nablarch.fw.jaxrs;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.junit.Test;
 
+import javax.validation.Valid;
+import javax.validation.groups.ConvertGroup;
+import javax.validation.groups.Default;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 
@@ -12,6 +17,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.typeCompatibleWith;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * {@link JaxRsContext}のテスト。
@@ -82,6 +88,61 @@ public class JaxRsContextTest {
         assertThat(jaxRsContext.getProducesMediaType(), is("application/json"));
     }
 
+    @Test
+    public void getValidationAnnotation() throws Exception {
+
+        JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
+        assertThat(jaxRsContext.hasValidAnnotation(), is(false));
+        assertThat(jaxRsContext.hasConvertGroupAnnotation(), is(false));
+        try {
+            jaxRsContext.getToAttributesOfConvertGroupAnnotation();
+            fail("IllegalStateExceptionが送出されるはず");
+        } catch (IllegalStateException e) {
+            assertThat(e.getMessage(), is("ConvertGroup annotation is not set for the resource method."));
+        }
+
+        jaxRsContext = new JaxRsContext(TestAction.class.getMethod("validAndConvertGroups"));
+        assertThat(jaxRsContext.hasValidAnnotation(), is(true));
+        assertThat(jaxRsContext.hasConvertGroupAnnotation(), is(true));
+        assertThat(jaxRsContext.getToAttributesOfConvertGroupAnnotation(), ClassMatcher.isClassOf(TestAction.Test1.class));
+    }
+
+    private static class ClassMatcher extends BaseMatcher<Class<?>> {
+
+        private final Class<?> expected;
+        private Class<?> actual;
+
+        private ClassMatcher(Class<?> expected) {
+            this.expected = expected;
+        }
+
+        @Override
+        public boolean matches(Object actual) {
+
+            if (!(actual instanceof Class<?>)) {
+                return false;
+            }
+
+            this.actual = (Class<?>)actual;
+
+            return this.actual.equals(this.expected);
+
+        }
+
+        @Override
+        public void describeTo(Description description) {
+            description.appendText("is  ");
+            description.appendValue(expected);
+        }
+
+        public static ClassMatcher isClassOf(Class<?> clazz) {
+            return new ClassMatcher(clazz);
+        }
+
+    }
+
+
+
     public static class TestAction {
 
         public HttpResponse nothing() {
@@ -129,6 +190,14 @@ public class JaxRsContextTest {
         public HttpResponse multiValuesProduces() {
             return new HttpResponse();
         }
+
+        @Valid
+        @ConvertGroup(from = Default.class, to = Test1.class)
+        public HttpResponse validAndConvertGroups() {
+            return new HttpResponse();
+        }
+
+        public interface Test1{}
     }
 
     public static class TestBean1 {
