@@ -141,6 +141,36 @@ public class JaxRsBeanValidationHandlerTest {
     }
 
     /**
+     * {@link Valid}アノテーションと{@link ConvertGroup}アノテーションが設定されていてエラーが発生しない場合、後続のハンドラが呼び出されること。
+     * {@link ConvertGroup}の{@code from}に{@link Default}以外が設定される場合、{@code to}に指定したグループは適用されず、デフォルトグループで検証される。
+     * {@link Groups.Test1}グループで検証される{@link Groups#name}は検証スキップされる。
+     */
+    @Test
+    public void testWithValidAnnotation_ValidationSuccess_WithDefaultGroup() throws Exception {
+        // ---------------------------------------- setup
+        Method method = TestResource.class.getMethod("withValidAndDefaultGroup");
+        JaxRsContext jaxRsContext = new JaxRsContext(method);
+        jaxRsContext.setRequest(new Groups("1234", "hoge"));
+
+        ExecutionContext context = new ExecutionContext();
+        JaxRsContext.set(context, jaxRsContext);
+
+        Handler<Object, String> handler = new Handler<Object, String>() {
+            @Override
+            public String handle(Object o, ExecutionContext context) {
+                return "ok";
+            }
+        };
+        context.addHandler(handler);
+
+        // ---------------------------------------- execute
+        String result = (String) sut.handle(mockRequest, context);
+
+        // ---------------------------------------- assert
+        assertThat("バリデーションエラーは発生しないので後続のハンドラの結果が戻されること", result, is("ok"));
+    }
+
+    /**
      * {@link Valid}アノテーションが設定されていてエラーが発生しない場合、後続のハンドラが呼び出されること。
      * {@link Groups.Test1}グループで検証される{@link Groups#name}は検証スキップされる。
      */
@@ -276,6 +306,9 @@ public class JaxRsBeanValidationHandlerTest {
         @ConvertGroup(from = Default.class, to = Groups.Test1.class)
         public void withValidAndGroup(){}
 
+        @Valid
+        @ConvertGroup(from = Groups.Test2.class, to = Groups.Test1.class)
+        public void withValidAndDefaultGroup(){}
     }
 
     /**
@@ -337,6 +370,7 @@ public class JaxRsBeanValidationHandlerTest {
         }
 
         public interface Test1{}
+        public interface Test2{}
 
     }
 

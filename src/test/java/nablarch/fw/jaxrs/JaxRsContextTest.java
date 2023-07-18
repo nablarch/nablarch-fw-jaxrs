@@ -122,6 +122,24 @@ public class JaxRsContextTest {
     }
 
     /**
+     * リクエストメソッド設定した{@link ConvertGroup}アノテーションから、{@code from}属性が取得できること
+     */
+    @Test
+    public void getFromAttributeOfConvertGroupAnnotation() throws Exception {
+
+        JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
+        try {
+            jaxRsContext.getFromAttributesOfConvertGroupAnnotation();
+            fail("IllegalStateExceptionが送出されるはず");
+        } catch (IllegalStateException e) {
+            assertThat(e.getMessage(), is("ConvertGroup annotation is not set for the resource method."));
+        }
+
+        jaxRsContext = new JaxRsContext(TestAction.class.getMethod("validAndConvertGroups"));
+        assertThat(jaxRsContext.getFromAttributesOfConvertGroupAnnotation(), typeCompatibleWith(Default.class));
+    }
+
+    /**
      * リクエストメソッド設定した{@link ConvertGroup}アノテーションから、{@code to}属性が取得できること
      */
     @Test

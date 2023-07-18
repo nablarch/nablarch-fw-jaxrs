@@ -112,9 +112,24 @@ public class JaxRsContext {
     }
 
     /**
+     * リソースメソッドに設定されている{@link ConvertGroup}の{@code from}属性の値を取得する。
+     *
+     * @return {@code from}属性に設定されているBean Validationのグループ
+     */
+    public Class<?> getFromAttributesOfConvertGroupAnnotation() {
+
+        ConvertGroup annotation = resourceMethod.getAnnotation(ConvertGroup.class);
+        if (null == annotation) {
+            throw new IllegalStateException("ConvertGroup annotation is not set for the resource method.");
+        }
+
+        return resourceMethod.getAnnotation(ConvertGroup.class).from();
+    }
+
+    /**
      * リソースメソッドに設定されている{@link ConvertGroup}の{@code to}属性の値を取得する。
      *
-     * @return {@code to}属性に設定されているBean Validationのグループ配列
+     * @return {@code to}属性に設定されているBean Validationのグループ
      */
     public Class<?> getToAttributesOfConvertGroupAnnotation() {
 

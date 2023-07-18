@@ -2,6 +2,7 @@ package nablarch.fw.jaxrs;
 
 import javax.validation.Valid;
 import javax.validation.groups.ConvertGroup;
+import javax.validation.groups.Default;
 
 import nablarch.core.message.ApplicationException;
 import nablarch.core.validation.ee.ValidatorUtil;
@@ -29,7 +30,7 @@ public class JaxRsBeanValidationHandler implements Handler<HttpRequest, Object> 
         final JaxRsContext jaxRsContext = JaxRsContext.get(context);
 
         if (jaxRsContext.hasValidAnnotation() && jaxRsContext.hasRequest()) {
-            if(jaxRsContext.hasConvertGroupAnnotation()) {
+            if(jaxRsContext.hasConvertGroupAnnotation() && jaxRsContext.getFromAttributesOfConvertGroupAnnotation().equals(Default.class)) {
                 validateParamWithGroup(jaxRsContext);
             } else {
                 validateParam(jaxRsContext);
