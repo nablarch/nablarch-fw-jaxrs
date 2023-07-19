@@ -172,7 +172,7 @@ public class JaxRsBeanValidationHandlerTest {
 
     /**
      * {@link Valid}アノテーションが設定されていてエラーが発生しない場合、後続のハンドラが呼び出されること。
-     * {@link Groups.Test1}グループで検証される{@link Groups#name}は検証スキップされる。
+     * {@link ConvertGroup}が設定されていない場合、{@link Default}グループで検証される。
      */
     @Test
     public void testWithValidAnnotation_ValidationSuccess_WithoutGroup() throws Exception {
@@ -200,7 +200,7 @@ public class JaxRsBeanValidationHandlerTest {
     }
 
     /**
-     * {@link Valid}アノテーションと{@link ConvertGroup}アノテーションが設定されていてエラーがする場合、{@link ApplicationException}が送出されること。
+     * {@link Valid}アノテーションと{@link ConvertGroup}アノテーションが設定されていてエラーとなる場合、{@link ApplicationException}が送出されること。
      */
     @Test
     public void testWithValidAnnotation_ValidationError_WithGroup() throws Exception {

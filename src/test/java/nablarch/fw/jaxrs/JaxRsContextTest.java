@@ -128,15 +128,10 @@ public class JaxRsContextTest {
     public void getFromAttributeOfConvertGroupAnnotation() throws Exception {
 
         JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
-        try {
-            jaxRsContext.getFromAttributesOfConvertGroupAnnotation();
-            fail("IllegalStateExceptionが送出されるはず");
-        } catch (IllegalStateException e) {
-            assertThat(e.getMessage(), is("ConvertGroup annotation is not set for the resource method."));
-        }
+        assertThat(jaxRsContext.getFromOfConvertGroupAnnotation(), is(nullValue()));
 
         jaxRsContext = new JaxRsContext(TestAction.class.getMethod("validAndConvertGroups"));
-        assertThat(jaxRsContext.getFromAttributesOfConvertGroupAnnotation(), typeCompatibleWith(Default.class));
+        assertThat(jaxRsContext.getFromOfConvertGroupAnnotation(), typeCompatibleWith(Default.class));
     }
 
     /**
@@ -146,15 +141,10 @@ public class JaxRsContextTest {
     public void getToAttributeOfConvertGroupAnnotation() throws Exception {
 
         JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
-        try {
-            jaxRsContext.getToAttributesOfConvertGroupAnnotation();
-            fail("IllegalStateExceptionが送出されるはず");
-        } catch (IllegalStateException e) {
-            assertThat(e.getMessage(), is("ConvertGroup annotation is not set for the resource method."));
-        }
+        assertThat(jaxRsContext.getToOfConvertGroupAnnotation(), is(nullValue()));
 
         jaxRsContext = new JaxRsContext(TestAction.class.getMethod("validAndConvertGroups"));
-        assertThat(jaxRsContext.getToAttributesOfConvertGroupAnnotation(), typeCompatibleWith(TestAction.Test1.class));
+        assertThat(jaxRsContext.getToOfConvertGroupAnnotation(), typeCompatibleWith(TestAction.Test1.class));
     }
 
     public static class TestAction {

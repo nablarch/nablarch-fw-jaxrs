@@ -116,11 +116,11 @@ public class JaxRsContext {
      *
      * @return {@code from}属性に設定されているBean Validationのグループ
      */
-    public Class<?> getFromAttributesOfConvertGroupAnnotation() {
+    public Class<?> getFromOfConvertGroupAnnotation() {
 
         ConvertGroup annotation = resourceMethod.getAnnotation(ConvertGroup.class);
         if (null == annotation) {
-            throw new IllegalStateException("ConvertGroup annotation is not set for the resource method.");
+            return null;
         }
 
         return resourceMethod.getAnnotation(ConvertGroup.class).from();
@@ -131,11 +131,11 @@ public class JaxRsContext {
      *
      * @return {@code to}属性に設定されているBean Validationのグループ
      */
-    public Class<?> getToAttributesOfConvertGroupAnnotation() {
+    public Class<?> getToOfConvertGroupAnnotation() {
 
         ConvertGroup annotation = resourceMethod.getAnnotation(ConvertGroup.class);
         if (null == annotation) {
-            throw new IllegalStateException("ConvertGroup annotation is not set for the resource method.");
+            return null;
         }
 
         return resourceMethod.getAnnotation(ConvertGroup.class).to();

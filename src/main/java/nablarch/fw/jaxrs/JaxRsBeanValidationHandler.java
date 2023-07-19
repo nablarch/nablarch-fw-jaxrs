@@ -30,7 +30,7 @@ public class JaxRsBeanValidationHandler implements Handler<HttpRequest, Object> 
         final JaxRsContext jaxRsContext = JaxRsContext.get(context);
 
         if (jaxRsContext.hasValidAnnotation() && jaxRsContext.hasRequest()) {
-            if(jaxRsContext.hasConvertGroupAnnotation() && jaxRsContext.getFromAttributesOfConvertGroupAnnotation().equals(Default.class)) {
+            if(jaxRsContext.hasConvertGroupAnnotation() && jaxRsContext.getFromOfConvertGroupAnnotation().equals(Default.class)) {
                 validateParamWithGroup(jaxRsContext);
             } else {
                 validateParam(jaxRsContext);
@@ -49,6 +49,6 @@ public class JaxRsBeanValidationHandler implements Handler<HttpRequest, Object> 
     }
 
     private void validateParamWithGroup(final JaxRsContext jaxRsContext) {
-        ValidatorUtil.validateWithGroup(jaxRsContext.getRequest(), jaxRsContext.getToAttributesOfConvertGroupAnnotation());
+        ValidatorUtil.validateWithGroup(jaxRsContext.getRequest(), jaxRsContext.getToOfConvertGroupAnnotation());
     }
 }
