@@ -30,7 +30,7 @@ public class JaxRsBeanValidationHandler implements Handler<HttpRequest, Object> 
         final JaxRsContext jaxRsContext = JaxRsContext.get(context);
 
         if (jaxRsContext.hasValidAnnotation() && jaxRsContext.hasRequest()) {
-            if(jaxRsContext.hasConvertGroupAnnotation() && jaxRsContext.getFromOfConvertGroupAnnotation().equals(Default.class)) {
+            if(jaxRsContext.hasConvertGroupAnnotation() && Default.class == jaxRsContext.getFromOfConvertGroupAnnotation()) {
                 validateParamWithGroup(jaxRsContext);
             } else {
                 validateParam(jaxRsContext);

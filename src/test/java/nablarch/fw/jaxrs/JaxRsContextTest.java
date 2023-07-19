@@ -11,11 +11,10 @@ import javax.validation.groups.Default;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.typeCompatibleWith;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
 /**
  * {@link JaxRsContext}のテスト。

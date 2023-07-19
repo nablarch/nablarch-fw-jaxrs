@@ -1,8 +1,8 @@
 package nablarch.fw.jaxrs;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
