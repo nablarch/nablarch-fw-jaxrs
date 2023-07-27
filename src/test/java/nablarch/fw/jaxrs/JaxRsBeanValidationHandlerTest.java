@@ -296,19 +296,25 @@ public class JaxRsBeanValidationHandlerTest {
     private static class TestResource {
 
         public void withoutValid() {
+            // NOP
         }
 
         @Valid
         public void withValid() {
+            // NOP
         }
 
         @Valid
         @ConvertGroup(from = Default.class, to = Groups.Test1.class)
-        public void withValidAndGroup(){}
+        public void withValidAndGroup() {
+            // NOP
+        }
 
         @Valid
         @ConvertGroup(from = Groups.Test2.class, to = Groups.Test1.class)
-        public void withValidAndDefaultGroup(){}
+        public void withValidAndDefaultGroup() {
+            // NOP
+        }
     }
 
     /**
@@ -376,7 +382,7 @@ public class JaxRsBeanValidationHandlerTest {
 
     public static class CustomMessageInterpolator implements MessageInterpolator {
 
-        private static Map<String, String> messageTable = new HashMap<String, String>() {{
+        private static final Map<String, String> messageTable = new HashMap<String, String>() {{
             put("{nablarch.core.validation.ee.Required.message}", "必須の項目です");
             put("{nablarch.core.validation.ee.Length.fixed.message}", "文字列は固定長です");
         }};

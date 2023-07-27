@@ -15,9 +15,7 @@ import nablarch.fw.web.HttpRequest;
  * <p/>
  * リソースメソッドに対して{@link Valid}アノテーションが設定されている場合、
  * データオブジェクト(リソースメソッドの引数となるBeanオブジェクト)に対してバリデーションを行う。
- *
  * リソースメソッドに{@link ConvertGroup}アノテーションが設定されている場合、バリデーション時にBean Validationのグループを設定できる。
- *
  * バリデーションエラーが発生した場合には、{@link ApplicationException}を送出する。
  * エラーが発生しなかった場合は、後続のハンドラに処理を委譲する。
  *

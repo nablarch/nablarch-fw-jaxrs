@@ -164,6 +164,7 @@ public class JaxRsContextTest {
             return new HttpResponse();
         }
 
+        @SuppressWarnings("UastIncorrectMimeTypeInspection")
         @Consumes("")
         public HttpResponse emptyConsumes() {
             return new HttpResponse();
@@ -179,6 +180,7 @@ public class JaxRsContextTest {
             return new HttpResponse();
         }
 
+        @SuppressWarnings("UastIncorrectMimeTypeInspection")
         @Produces("")
         public HttpResponse emptyProduces() {
             return new HttpResponse();
