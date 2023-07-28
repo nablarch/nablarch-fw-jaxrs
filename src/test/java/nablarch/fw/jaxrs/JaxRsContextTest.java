@@ -5,13 +5,16 @@ import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
 import org.junit.Test;
 
+import jakarta.validation.Valid;
+import jakarta.validation.groups.ConvertGroup;
+import jakarta.validation.groups.Default;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.Produces;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.typeCompatibleWith;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 /**
  * {@link JaxRsContext}のテスト。
@@ -41,6 +44,9 @@ public class JaxRsContextTest {
         assertThat(JaxRsContext.get(context), is(jaxRsContext));
     }
 
+    /**
+     * リクエストメソッドの引数の型の設定/取得ができること
+     */
     @Test
     public void getRequestClass() throws Exception {
         JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
@@ -56,6 +62,9 @@ public class JaxRsContextTest {
         assertThat(jaxRsContext.getRequestClass(), typeCompatibleWith(TestBean2.class));
     }
 
+    /**
+     * Consumesメディアタイプの設定/取得ができること
+     */
     @Test
     public void getConsumesMediaType() throws Exception {
 
@@ -69,6 +78,9 @@ public class JaxRsContextTest {
         assertThat(jaxRsContext.getConsumesMediaType(), is("application/xml"));
     }
 
+    /**
+     * Producesメディアタイプの設定/取得ができること
+     */
     @Test
     public void getProducesMediaType() throws Exception {
 
@@ -80,6 +92,58 @@ public class JaxRsContextTest {
 
         jaxRsContext = new JaxRsContext(TestAction.class.getMethod("multiValuesProduces"));
         assertThat(jaxRsContext.getProducesMediaType(), is("application/json"));
+    }
+
+    /**
+     * リクエストメソッドに{@link Valid}アノテーションが設定されているか判定できること。
+     */
+    @Test
+    public void checkValidAnnotation() throws Exception {
+
+        JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
+        assertThat(jaxRsContext.hasValidAnnotation(), is(false));
+
+        jaxRsContext = new JaxRsContext(TestAction.class.getMethod("validAndConvertGroups"));
+        assertThat(jaxRsContext.hasValidAnnotation(), is(true));
+    }
+
+    /**
+     * リクエストメソッドに{@link ConvertGroup}アノテーションが設定されているか判定できること。
+     */
+    @Test
+    public void checkConvertGroupAnnotation() throws Exception {
+
+        JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
+        assertThat(jaxRsContext.hasConvertGroupAnnotation(), is(false));
+
+        jaxRsContext = new JaxRsContext(TestAction.class.getMethod("validAndConvertGroups"));
+        assertThat(jaxRsContext.hasConvertGroupAnnotation(), is(true));
+    }
+
+    /**
+     * リクエストメソッド設定した{@link ConvertGroup}アノテーションから、{@code from}属性が取得できること
+     */
+    @Test
+    public void getFromAttributeOfConvertGroupAnnotation() throws Exception {
+
+        JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
+        assertThat(jaxRsContext.getFromOfConvertGroupAnnotation(), is(nullValue()));
+
+        jaxRsContext = new JaxRsContext(TestAction.class.getMethod("validAndConvertGroups"));
+        assertThat(jaxRsContext.getFromOfConvertGroupAnnotation(), typeCompatibleWith(Default.class));
+    }
+
+    /**
+     * リクエストメソッド設定した{@link ConvertGroup}アノテーションから、{@code to}属性が取得できること
+     */
+    @Test
+    public void getToAttributeOfConvertGroupAnnotation() throws Exception {
+
+        JaxRsContext jaxRsContext = new JaxRsContext(TestAction.class.getMethod("nothing"));
+        assertThat(jaxRsContext.getToOfConvertGroupAnnotation(), is(nullValue()));
+
+        jaxRsContext = new JaxRsContext(TestAction.class.getMethod("validAndConvertGroups"));
+        assertThat(jaxRsContext.getToOfConvertGroupAnnotation(), typeCompatibleWith(TestAction.Test1.class));
     }
 
     public static class TestAction {
@@ -100,6 +164,7 @@ public class JaxRsContextTest {
             return new HttpResponse();
         }
 
+        @SuppressWarnings("UastIncorrectMimeTypeInspection")
         @Consumes("")
         public HttpResponse emptyConsumes() {
             return new HttpResponse();
@@ -115,6 +180,7 @@ public class JaxRsContextTest {
             return new HttpResponse();
         }
 
+        @SuppressWarnings("UastIncorrectMimeTypeInspection")
         @Produces("")
         public HttpResponse emptyProduces() {
             return new HttpResponse();
@@ -129,6 +195,14 @@ public class JaxRsContextTest {
         public HttpResponse multiValuesProduces() {
             return new HttpResponse();
         }
+
+        @Valid
+        @ConvertGroup(from = Default.class, to = Test1.class)
+        public HttpResponse validAndConvertGroups() {
+            return new HttpResponse();
+        }
+
+        public interface Test1{}
     }
 
     public static class TestBean1 {

@@ -1,6 +1,8 @@
 package nablarch.fw.jaxrs;
 
 import jakarta.validation.Valid;
+import jakarta.validation.groups.ConvertGroup;
+import jakarta.validation.groups.Default;
 
 import nablarch.core.message.ApplicationException;
 import nablarch.core.validation.ee.ValidatorUtil;
@@ -13,7 +15,7 @@ import nablarch.fw.web.HttpRequest;
  * <p/>
  * リソースメソッドに対して{@link Valid}アノテーションが設定されている場合、
  * データオブジェクト(リソースメソッドの引数となるBeanオブジェクト)に対してバリデーションを行う。
- *
+ * リソースメソッドに{@link ConvertGroup}アノテーションが設定されている場合、バリデーション時にBean Validationのグループを設定できる。
  * バリデーションエラーが発生した場合には、{@link ApplicationException}を送出する。
  * エラーが発生しなかった場合は、後続のハンドラに処理を委譲する。
  *
@@ -26,7 +28,11 @@ public class JaxRsBeanValidationHandler implements Handler<HttpRequest, Object> 
         final JaxRsContext jaxRsContext = JaxRsContext.get(context);
 
         if (jaxRsContext.hasValidAnnotation() && jaxRsContext.hasRequest()) {
-            validateParam(jaxRsContext);
+            if(jaxRsContext.hasConvertGroupAnnotation() && Default.class == jaxRsContext.getFromOfConvertGroupAnnotation()) {
+                validateParamWithGroup(jaxRsContext);
+            } else {
+                validateParam(jaxRsContext);
+            }
         }
         return context.handleNext(request);
     }
@@ -38,5 +44,9 @@ public class JaxRsBeanValidationHandler implements Handler<HttpRequest, Object> 
      */
     private void validateParam(final JaxRsContext jaxRsContext) {
         ValidatorUtil.validate(jaxRsContext.getRequest());
+    }
+
+    private void validateParamWithGroup(final JaxRsContext jaxRsContext) {
+        ValidatorUtil.validateWithGroup(jaxRsContext.getRequest(), jaxRsContext.getToOfConvertGroupAnnotation());
     }
 }

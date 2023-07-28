@@ -4,6 +4,8 @@ import jakarta.validation.MessageInterpolator;
 import jakarta.validation.Valid;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
+import jakarta.validation.groups.ConvertGroup;
+import jakarta.validation.groups.Default;
 import nablarch.core.message.ApplicationException;
 import nablarch.core.message.Message;
 import nablarch.core.validation.ValidationResultMessage;
@@ -30,7 +32,7 @@ import java.util.Map;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -105,6 +107,128 @@ public class JaxRsBeanValidationHandlerTest {
     }
 
     /**
+     * {@link Valid}アノテーションと{@link ConvertGroup}アノテーションが設定されていてエラーが発生しない場合、後続のハンドラが呼び出されること。
+     * デフォルトグループで検証される{@link Groups#id}は検証スキップされる。
+     */
+    @Test
+    public void testWithValidAnnotation_ValidationSuccess_WithGroup() throws Exception {
+        // ---------------------------------------- setup
+        Method method = TestResource.class.getMethod("withValidAndGroup");
+        JaxRsContext jaxRsContext = new JaxRsContext(method);
+        jaxRsContext.setRequest(new Groups("123456", "hogehoge"));
+
+        ExecutionContext context = new ExecutionContext();
+        JaxRsContext.set(context, jaxRsContext);
+
+        Handler<Object, String> handler = new Handler<Object, String>() {
+            @Override
+            public String handle(Object o, ExecutionContext context) {
+                return "ok";
+            }
+        };
+        context.addHandler(handler);
+
+        // ---------------------------------------- execute
+        String result = (String) sut.handle(mockRequest, context);
+
+        // ---------------------------------------- assert
+        assertThat("バリデーションエラーは発生しないので後続のハンドラの結果が戻されること", result, is("ok"));
+    }
+
+    /**
+     * {@link Valid}アノテーションと{@link ConvertGroup}アノテーションが設定されていてエラーが発生しない場合、後続のハンドラが呼び出されること。
+     * {@link ConvertGroup}の{@code from}に{@link Default}以外が設定される場合、{@code to}に指定したグループは適用されず、デフォルトグループで検証される。
+     * {@link Groups.Test1}グループで検証される{@link Groups#name}は検証スキップされる。
+     */
+    @Test
+    public void testWithValidAnnotation_ValidationSuccess_WithDefaultGroup() throws Exception {
+        // ---------------------------------------- setup
+        Method method = TestResource.class.getMethod("withValidAndDefaultGroup");
+        JaxRsContext jaxRsContext = new JaxRsContext(method);
+        jaxRsContext.setRequest(new Groups("1234", "hoge"));
+
+        ExecutionContext context = new ExecutionContext();
+        JaxRsContext.set(context, jaxRsContext);
+
+        Handler<Object, String> handler = new Handler<Object, String>() {
+            @Override
+            public String handle(Object o, ExecutionContext context) {
+                return "ok";
+            }
+        };
+        context.addHandler(handler);
+
+        // ---------------------------------------- execute
+        String result = (String) sut.handle(mockRequest, context);
+
+        // ---------------------------------------- assert
+        assertThat("バリデーションエラーは発生しないので後続のハンドラの結果が戻されること", result, is("ok"));
+    }
+
+    /**
+     * {@link Valid}アノテーションが設定されていてエラーが発生しない場合、後続のハンドラが呼び出されること。
+     * {@link ConvertGroup}が設定されていない場合、{@link Default}グループで検証される。
+     */
+    @Test
+    public void testWithValidAnnotation_ValidationSuccess_WithoutGroup() throws Exception {
+        // ---------------------------------------- setup
+        Method method = TestResource.class.getMethod("withValid");
+        JaxRsContext jaxRsContext = new JaxRsContext(method);
+        jaxRsContext.setRequest(new Groups("1234", "hoge"));
+
+        ExecutionContext context = new ExecutionContext();
+        JaxRsContext.set(context, jaxRsContext);
+
+        Handler<Object, String> handler = new Handler<Object, String>() {
+            @Override
+            public String handle(Object o, ExecutionContext context) {
+                return "ok";
+            }
+        };
+        context.addHandler(handler);
+
+        // ---------------------------------------- execute
+        String result = (String) sut.handle(mockRequest, context);
+
+        // ---------------------------------------- assert
+        assertThat("バリデーションエラーは発生しないので後続のハンドラの結果が戻されること", result, is("ok"));
+    }
+
+    /**
+     * {@link Valid}アノテーションと{@link ConvertGroup}アノテーションが設定されていてエラーとなる場合、{@link ApplicationException}が送出されること。
+     */
+    @Test
+    public void testWithValidAnnotation_ValidationError_WithGroup() throws Exception {
+        // ---------------------------------------- setup
+        Method method = TestResource.class.getMethod("withValidAndGroup");
+        JaxRsContext jaxRsContext = new JaxRsContext(method);
+        jaxRsContext.setRequest(new Groups("1234", "hoge"));
+
+        ExecutionContext context = new ExecutionContext();
+        JaxRsContext.set(context, jaxRsContext);
+
+        Handler<Object, String> handler = new Handler<Object, String>() {
+            @Override
+            public String handle(Object o, ExecutionContext context) {
+                return "ok";
+            }
+        };
+        context.addHandler(handler);
+
+        // ---------------------------------------- execute
+        try {
+            sut.handle(mockRequest, context);
+            Assert.fail("とおらない");
+        } catch (ApplicationException e) {
+            List<Message> messages = e.getMessages();
+            assertThat("エラーは1件", messages, hasSize(1));
+            ValidationResultMessage message = (ValidationResultMessage) messages.get(0);
+            assertThat("エラーが発生したのはnameプロパティ", message.getPropertyName(), is("name"));
+            assertThat("エラー内容は文字列長に関するもの", message.formatMessage(), is("文字列は固定長です"));
+        }
+    }
+
+    /**
      * {@link Valid}アノテーションが設定されているが、リクエストオブジェクトがnullの場合
      * 予期せぬエラーなど発生せずに後続のハンドラが呼び出されること。
      */
@@ -165,10 +289,24 @@ public class JaxRsBeanValidationHandlerTest {
     private static class TestResource {
 
         public void withoutValid() {
+            // NOP
         }
 
         @Valid
         public void withValid() {
+            // NOP
+        }
+
+        @Valid
+        @ConvertGroup(from = Default.class, to = Groups.Test1.class)
+        public void withValidAndGroup() {
+            // NOP
+        }
+
+        @Valid
+        @ConvertGroup(from = Groups.Test2.class, to = Groups.Test1.class)
+        public void withValidAndDefaultGroup() {
+            // NOP
         }
     }
 
@@ -217,10 +355,29 @@ public class JaxRsBeanValidationHandlerTest {
         }
     }
 
+    public static class Groups {
+
+        @Length(max = 4, min = 4)
+        String id;
+
+        @Length(max = 8, min = 8, groups = Test1.class)
+        String name;
+
+        public Groups(String id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public interface Test1{}
+        public interface Test2{}
+
+    }
+
     public static class CustomMessageInterpolator implements MessageInterpolator {
 
-        private static Map<String, String> messageTable = new HashMap<String, String>() {{
+        private static final Map<String, String> messageTable = new HashMap<String, String>() {{
             put("{nablarch.core.validation.ee.Required.message}", "必須の項目です");
+            put("{nablarch.core.validation.ee.Length.fixed.message}", "文字列は固定長です");
         }};
 
         @Override
