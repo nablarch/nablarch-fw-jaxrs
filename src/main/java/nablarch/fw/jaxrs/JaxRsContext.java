@@ -4,6 +4,7 @@ import nablarch.core.util.StringUtil;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpRequest;
 
+import javax.validation.groups.ConvertGroup;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import java.lang.reflect.Method;
@@ -99,6 +100,45 @@ public class JaxRsContext {
      */
     public boolean hasValidAnnotation() {
         return resourceMethod.getAnnotation(Valid.class) != null;
+    }
+
+    /**
+     * リソースメソッドに{@link ConvertGroup}が設定されているか否か。
+     *
+     * @return {@link ConvertGroup}が設定されている場合 {@code true}
+     */
+    public boolean hasConvertGroupAnnotation() {
+        return resourceMethod.getAnnotation(ConvertGroup.class) != null;
+    }
+
+    /**
+     * リソースメソッドに設定されている{@link ConvertGroup}の{@code from}属性の値を取得する。
+     *
+     * @return {@code from}属性に設定されているBean Validationのグループ
+     */
+    public Class<?> getFromOfConvertGroupAnnotation() {
+
+        ConvertGroup annotation = resourceMethod.getAnnotation(ConvertGroup.class);
+        if (null == annotation) {
+            return null;
+        }
+
+        return resourceMethod.getAnnotation(ConvertGroup.class).from();
+    }
+
+    /**
+     * リソースメソッドに設定されている{@link ConvertGroup}の{@code to}属性の値を取得する。
+     *
+     * @return {@code to}属性に設定されているBean Validationのグループ
+     */
+    public Class<?> getToOfConvertGroupAnnotation() {
+
+        ConvertGroup annotation = resourceMethod.getAnnotation(ConvertGroup.class);
+        if (null == annotation) {
+            return null;
+        }
+
+        return resourceMethod.getAnnotation(ConvertGroup.class).to();
     }
 
     /**

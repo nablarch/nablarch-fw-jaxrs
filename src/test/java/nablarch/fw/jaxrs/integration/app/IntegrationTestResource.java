@@ -37,7 +37,7 @@ public class IntegrationTestResource extends ExternalResource {
     private void createTestTable() {
         System.out.println("create person table");
         SqlPStatement statement = connection.prepareStatement(
-                "create table  if not exists  person (id IDENTITY , name varchar(100) not null, PRIMARY KEY (id))");
+                "create table if not exists person (id integer generated always as identity primary key, name varchar(100) not null)");
         statement.execute();
         statement.close();
         connection.commit();

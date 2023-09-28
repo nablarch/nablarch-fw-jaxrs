@@ -5,7 +5,7 @@
 
   <groupId>com.nablarch.framework</groupId>
   <artifactId>nablarch-fw-jaxrs</artifactId>
-  <version>1.2.0</version>
+  <version>1.3.0</version>
 
   <scm>
     <connection>scm:git:git://github.com/nablarch/${project.artifactId}.git</connection>
@@ -16,7 +16,7 @@
   <parent>
     <groupId>com.nablarch</groupId>
     <artifactId>nablarch-parent</artifactId>
-    <version>5u19</version>
+    <version>5u23</version>
   </parent>
 
   <profiles>
@@ -51,6 +51,13 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>java17</id>
+      <properties>
+        <!-- Arquillian のテストで使用する AP サーバー(glassfish)を動かすために必要 -->
+        <junit.additionalArgLine>--add-opens java.base/java.lang=ALL-UNNAMED</junit.additionalArgLine>
+      </properties>
+    </profile>
   </profiles>
 
   <dependencies>
@@ -75,6 +82,13 @@
     <dependency>
       <groupId>org.jmockit</groupId>
       <artifactId>jmockit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>2.28.2</version>
       <scope>test</scope>
     </dependency>
 
@@ -146,7 +160,6 @@
     <dependency>
       <groupId>com.nablarch.integration</groupId>
       <artifactId>nablarch-jersey-adaptor</artifactId>
-      <version>LATEST</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
