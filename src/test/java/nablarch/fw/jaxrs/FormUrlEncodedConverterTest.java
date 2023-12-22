@@ -1,34 +1,35 @@
 package nablarch.fw.jaxrs;
 
-import mockit.Expectations;
-import mockit.Mocked;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Map;
 
-import static org.hamcrest.Matchers.*;
+import static nablarch.fw.jaxrs.HttpResponseMatcher.isStatusCode;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-
-import static nablarch.fw.jaxrs.HttpResponseMatcher.isStatusCode;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link FormUrlEncodedConverter}のテスト。
  */
 public class FormUrlEncodedConverterTest {
 
-    @Mocked
-    private HttpRequest request;
+    private final HttpRequest request = mock(HttpRequest.class);
 
     private FormUrlEncodedConverter sut;
     private ExecutionContext executionContext;
@@ -66,15 +67,12 @@ public class FormUrlEncodedConverterTest {
 
         JaxRsContext.set(executionContext, new JaxRsContext(Action.class.getMethod("method1", Entity.class)));
 
-        new Expectations() {{
-            request.getParamMap();
-            result = new HashMap<String, String[]>() {{
-                put("strValue", new String[] {"test"});
-                put("intValue", new String[] {"123"});
-                put("unusedValue", new String[] {"hoge"});
-            }};
-        }};
-
+        when(request.getParamMap()).thenReturn(Map.of(
+                "strValue", new String[] {"test"},
+                "intValue", new String[] {"123"},
+                "unusedValue", new String[] {"hoge"}
+        ));
+        
         Object object = sut.convertRequest(request, executionContext);
 
         Entity entity = (Entity) object;
@@ -91,10 +89,7 @@ public class FormUrlEncodedConverterTest {
 
         JaxRsContext.set(executionContext, new JaxRsContext(Action.class.getMethod("method1", Entity.class)));
 
-        new Expectations() {{
-            request.getParamMap();
-            result = Collections.emptyMap();
-        }};
+        when(request.getParamMap()).thenReturn(Collections.emptyMap());
 
         Object object = sut.convertRequest(request, executionContext);
 
@@ -113,14 +108,11 @@ public class FormUrlEncodedConverterTest {
 
         JaxRsContext.set(executionContext, new JaxRsContext(Action.class.getMethod("method1", Entity.class)));
 
-        new Expectations() {{
-            request.getParamMap();
-            result = new HashMap<String, String[]>() {{
-                put("strValue", new String[] {"test"});
-                put("intValue", new String[] {"moji"}); // Integerに対して数字以外の値
-                put("unusedValue", new String[] {"hoge"});
-            }};
-        }};
+        when(request.getParamMap()).thenReturn(Map.of(
+            "strValue", new String[] {"test"},
+            "intValue", new String[] {"moji"}, // Integerに対して数字以外の値
+            "unusedValue", new String[] {"hoge"}
+        ));
 
         Object object = sut.convertRequest(request, executionContext);
 

@@ -5,23 +5,27 @@ import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpResponseException;
 import com.google.api.client.http.javanet.NetHttpTransport;
+import nablarch.core.util.Builder;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
@@ -32,7 +36,6 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
 import nablarch.fw.jaxrs.integration.app.IntegrationTestResource;
 import nablarch.fw.jaxrs.integration.app.Person;
 import nablarch.fw.jaxrs.integration.app.Persons;
-import nablarch.test.support.log.app.OnMemoryLogWriter;
 
 import org.junit.After;
 import org.junit.Before;
@@ -71,15 +74,21 @@ public class JaxRsIntegrationTest {
     @ArquillianResource
     private URL baseUrl;
 
+    private PrintStream originalStandardOutput;
+    private ByteArrayOutputStream bufferStandardOutput;
+
     @Before
     public void setUp() throws Exception {
         testResource.truncatePersonTable();
-        OnMemoryLogWriter.clear();
+
+        originalStandardOutput = System.out;
+        bufferStandardOutput = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(bufferStandardOutput, true, StandardCharsets.UTF_8));
     }
 
     @After
     public void tearDown() {
-        OnMemoryLogWriter.clear();
+        System.setOut(originalStandardOutput);
     }
 
     /**
@@ -126,7 +135,7 @@ public class JaxRsIntegrationTest {
         assertThat(response.getLength(), is(0));
         assertThat(testResource.findAllPerson().size(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", "IllegalArgumentException"," argument definition is invalid. method = [saveXmlInvalidSignature]");
+        assertLogContains("IllegalArgumentException"," argument definition is invalid. method = [saveXmlInvalidSignature]");
     }
 
     /**
@@ -344,10 +353,8 @@ public class JaxRsIntegrationTest {
         assertThat(response.getLength(), is(0));
         assertThat(testResource.findAllPerson().size(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", " status code=[400]");
-
-        List<String> errorLog = OnMemoryLogWriter.getMessages("writer.errorOnly");
-        assertThat("デフォルトではエラーメッセージは出力されないこと。", errorLog.size(), is(0));
+        assertLogContains(" status code=[400]");
+        assertLogNoError();
     }
 
     /**
@@ -366,10 +373,8 @@ public class JaxRsIntegrationTest {
         assertThat(response.getLength(), is(0));
         assertThat(testResource.findAllPerson().size(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", " status code=[400]");
-
-        List<String> errorLog = OnMemoryLogWriter.getMessages("writer.errorOnly");
-        assertThat("デフォルトではエラーメッセージは出力されないこと。", errorLog.size(), is(0));
+        assertLogContains(" status code=[400]");
+        assertLogNoError();
     }
 
     /**
@@ -391,10 +396,8 @@ public class JaxRsIntegrationTest {
         assertThat(response.getLength(), is(0));
         assertThat(testResource.findAllPerson().size(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", " status code=[400]");
-
-        List<String> errorLog = OnMemoryLogWriter.getMessages("writer.errorOnly");
-        assertThat("デフォルトではエラーメッセージは出力されないこと。", errorLog.size(), is(0));
+        assertLogContains(" status code=[400]");
+        assertLogNoError();
     }
 
     /**
@@ -443,7 +446,7 @@ public class JaxRsIntegrationTest {
         assertThat("404であること", response.getStatus(), is(404));
         assertThat("ボディは空であること", response.getLength(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", "GET", "action/notfound/fuga/hoge", " status code=[404]");
+        assertLogContains("GET", "action/notfound/fuga/hoge", " status code=[404]");
     }
 
     /**
@@ -460,7 +463,7 @@ public class JaxRsIntegrationTest {
         assertThat("404であること", response.getStatus(), is(404));
         assertThat("ボディは空であること", response.getLength(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", "GET", "action/error/notexist", " status code=[404]");
+        assertLogContains("GET", "action/error/notexist", " status code=[404]");
     }
 
     /**
@@ -522,8 +525,7 @@ public class JaxRsIntegrationTest {
         assertThat("415であること", response.getStatus(), is(415));
         assertThat("ボディは空であること", response.getLength(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory"
-                , "unsupported media type requested. "
+        assertLogContains("unsupported media type requested. "
                 , "request method = [POST], "
                 , "request uri = [/action/notMathMediaType], "
                 , "content type = [" + MediaType.APPLICATION_XML_TYPE + "], "
@@ -546,7 +548,7 @@ public class JaxRsIntegrationTest {
         assertThat("400であること", response.getStatus(), is(400));
         assertThat("ボディは空であること", response.getLength(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", "failed to read request. cause = ", "Unexpected end-of-input", " status code=[400]");
+        assertLogContains("failed to read request. cause = ", "Unexpected end-of-input", " status code=[400]");
     }
 
     /**
@@ -565,7 +567,7 @@ public class JaxRsIntegrationTest {
         assertThat(response.getLength(), is(0));
         assertThat(testResource.findAllPerson().size(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", "failed to read request. cause = ", "Unrecognized field \"unknown_property\"", " status code=[400]");
+        assertLogContains("failed to read request. cause = ", "Unrecognized field \"unknown_property\"", " status code=[400]");
     }
     /**
      * 不正なXMLフォーマットを送信した場合
@@ -581,7 +583,7 @@ public class JaxRsIntegrationTest {
         assertThat("400であること", response.getStatus(), is(400));
         assertThat("ボディは空であること", response.getLength(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", "failed to read request. cause = ", " status code=[400]");
+        assertLogContains("failed to read request. cause = ", " status code=[400]");
     }
 
     /**
@@ -659,10 +661,8 @@ public class JaxRsIntegrationTest {
         assertThat("アプリケーションエラーが発生するので400", response.getStatus(), is(400));
         assertThat("ボディは空", response.getLength(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", " status code=[400]");
-
-        List<String> errorLog = OnMemoryLogWriter.getMessages("writer.errorOnly");
-        assertThat("デフォルトではエラーメッセージは出力されないこと。", errorLog.size(), is(0));
+        assertLogContains(" status code=[400]");
+        assertLogNoError();
 
     }
 
@@ -682,7 +682,7 @@ public class JaxRsIntegrationTest {
         assertThat("500であること", response.getStatus(), is(500));
         assertThat("ボディは空", response.getLength(), is(0));
 
-        OnMemoryLogWriter.assertLogContains("writer.memory", "throw test Exception with message.", " status code=[500]");
+        assertLogContains("throw test Exception with message.", " status code=[500]");
     }
 
     /**
@@ -705,7 +705,7 @@ public class JaxRsIntegrationTest {
         } catch (HttpResponseException e) {
             assertThat("400であること", e.getStatusCode(), is(400));
             assertThat("ボディは空であること", e.getContent(), is(nullValue()));
-            OnMemoryLogWriter.assertLogContains("writer.memory", "consumes charset is invalid. charset = [test]", "status code=[400]");
+            assertLogContains("consumes charset is invalid. charset = [test]", "status code=[400]");
         }
     }
 
@@ -728,5 +728,49 @@ public class JaxRsIntegrationTest {
         public int status;
         public String message;
     }
-}
 
+    /**
+     * 出力されたログに指定したメッセージが全て含まれることを検証する。
+     * @param expectedMessages 出力されていることを期待するメッセージ
+     */
+    private void assertLogContains(String... expectedMessages) {
+        String actualLogText = bufferStandardOutput.toString(StandardCharsets.UTF_8);
+
+        for (String expectedMessage : expectedMessages) {
+            if (!actualLogText.contains(expectedMessage)) {
+                throw new AssertionError(Builder.concat(
+                        "expected log not found. \n",
+                        "expected = ", Arrays.toString(expectedMessages), "\n",
+                        "actual   = ", actualLogText)
+                );
+            }
+        }
+    }
+
+    /**
+     * エラーログが出力されていないことを検証する。
+     */
+    private void assertLogNoError() {
+        // MONITOR ロガーにだけ設定した errout ライターによる出力がないことを確認することで、
+        // エラーログが出力されていないことを確認する。
+        assertLogNotContains("@ERROR_OUT@");
+    }
+
+    /**
+     * 出力されたログに指定したメッセージが1つも出力されていないことを検証する。
+     * @param unexpectedMessages 出力されていないことを期待するメッセージ
+     */
+    private void assertLogNotContains(String... unexpectedMessages) {
+        String actualLogText = bufferStandardOutput.toString(StandardCharsets.UTF_8);
+
+        for (String unexpectedMessage : unexpectedMessages) {
+            if (actualLogText.contains(unexpectedMessage)) {
+                throw new AssertionError(Builder.concat(
+                        "unexpected log is found. \n",
+                        "unexpected = ", Arrays.toString(unexpectedMessages), "\n",
+                        "actual   = ", actualLogText)
+                );
+            }
+        }
+    }
+}

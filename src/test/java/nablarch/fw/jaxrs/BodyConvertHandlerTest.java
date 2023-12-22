@@ -1,18 +1,8 @@
 package nablarch.fw.jaxrs;
 
-import static nablarch.fw.jaxrs.HttpResponseMatcher.isStatusCode;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.Handler;
 import nablarch.fw.web.HttpErrorResponse;
@@ -21,21 +11,27 @@ import nablarch.fw.web.HttpRequestHandler;
 import nablarch.fw.web.HttpResponse;
 import nablarch.fw.web.HttpResponse.Status;
 import nablarch.test.support.log.app.OnMemoryLogWriter;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import mockit.Expectations;
-import mockit.Mocked;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import static nablarch.fw.jaxrs.HttpResponseMatcher.isStatusCode;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link BodyConvertHandler}のテスト。
  */
 public class BodyConvertHandlerTest {
 
-    @Mocked
-    private HttpRequest mockRequest;
+    private final HttpRequest mockRequest = mock(HttpRequest.class);
 
     private BodyConvertHandler sut;
 
@@ -106,11 +102,7 @@ public class BodyConvertHandlerTest {
      */
     @Test
     public void consumes() {
-
-        new Expectations() {{
-            mockRequest.getHeader("Content-Type");
-            result = "application/json; charset=utf-8";
-        }};
+        when(mockRequest.getHeader("Content-Type")).thenReturn("application/json; charset=utf-8");
 
         final ExecutionContext context = executionContext("consumes");
 
@@ -271,10 +263,7 @@ public class BodyConvertHandlerTest {
     @Test
     public void consumesAndProduces() {
 
-        new Expectations() {{
-            mockRequest.getHeader("Content-Type");
-            result = "application/json; charset=utf-8";
-        }};
+        when(mockRequest.getHeader("Content-Type")).thenReturn("application/json; charset=utf-8");
 
         final ExecutionContext context = executionContext("consumesAndProduces");
 
@@ -304,14 +293,9 @@ public class BodyConvertHandlerTest {
     @Test
     public void unsupportedMediaTypeForMediaTypeMismatch() {
 
-        new Expectations() {{
-            mockRequest.getHeader("Content-Type");
-            result = "application/xml; charset=utf-8";
-            mockRequest.getRequestUri();
-            result = "/api/user";
-            mockRequest.getMethod();
-            result = "GET";
-        }};
+        when(mockRequest.getHeader("Content-Type")).thenReturn("application/xml; charset=utf-8");
+        when(mockRequest.getRequestUri()).thenReturn("/api/user");
+        when(mockRequest.getMethod()).thenReturn("GET");
 
         final ExecutionContext context = executionContext("consumes"); // application/json
 
@@ -339,14 +323,9 @@ public class BodyConvertHandlerTest {
      */
     @Test
     public void withContentTypeAndWithoutConsumes() {
-        new Expectations() {{
-            mockRequest.getHeader("Content-Type");
-            result = "application/json";
-            mockRequest.getMethod();
-            result = "POST";
-            mockRequest.getRequestUri();
-            result = "/api/user";
-        }};
+        when(mockRequest.getHeader("Content-Type")).thenReturn("application/json");
+        when(mockRequest.getMethod()).thenReturn("POST");
+        when(mockRequest.getRequestUri()).thenReturn("/api/user");
 
         final ExecutionContext context = executionContext("noAnnotations"); // application/json
 
@@ -377,15 +356,10 @@ public class BodyConvertHandlerTest {
     @Test
     public void unsupportedMediaTypeForNoContentType() {
 
-        new Expectations() {{
-            mockRequest.getHeader("Content-Type");
-            result = null;
-            mockRequest.getMethod();
-            result = "PUT";
-            mockRequest.getRequestUri();
-            result = "/api/person";
-        }};
-
+        when(mockRequest.getHeader("Content-Type")).thenReturn(null);
+        when(mockRequest.getMethod()).thenReturn("PUT");
+        when(mockRequest.getRequestUri()).thenReturn("/api/person");
+        
         final ExecutionContext context = executionContext("consumes"); // application/json
 
         try {
@@ -526,10 +500,7 @@ public class BodyConvertHandlerTest {
             });
         }});
 
-        new Expectations() {{
-            mockRequest.getHeader("Content-Type");
-            result = "application/json";
-        }};
+        when(mockRequest.getHeader("Content-Type")).thenReturn("application/json");
 
         ExecutionContext context = executionContext("consumesAndProduces");
         context.setHandlerQueue(Arrays.asList(new Handler<HttpRequest, String>() {
@@ -587,10 +558,7 @@ public class BodyConvertHandlerTest {
             });
         }});
 
-        new Expectations() {{
-            mockRequest.getHeader("Content-Type");
-            result = "application/json";
-        }};
+        when(mockRequest.getHeader("Content-Type")).thenReturn("application/json");
 
         ExecutionContext context = executionContext("consumesAndProduces");
         context.setHandlerQueue(Arrays.asList(new Handler<HttpRequest, String>() {
@@ -633,10 +601,7 @@ public class BodyConvertHandlerTest {
             });
         }});
 
-        new Expectations() {{
-            mockRequest.getHeader("Content-Type");
-            result = "application/json";
-        }};
+        when(mockRequest.getHeader("Content-Type")).thenReturn("application/json");
 
         try {
             sut.handle(mockRequest, executionContext("consumes"));

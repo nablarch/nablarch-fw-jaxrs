@@ -4,12 +4,12 @@ import nablarch.core.util.StringUtil;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpRequest;
 
-import javax.validation.groups.ConvertGroup;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.Produces;
+import jakarta.validation.groups.ConvertGroup;
 import java.lang.reflect.Method;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 /**
  * JAX-RSのリソースクラスとしてActionハンドラを呼び出すのに必要な情報を保持するクラス。

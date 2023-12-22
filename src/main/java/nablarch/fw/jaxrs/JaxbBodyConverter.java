@@ -9,11 +9,11 @@ import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
 import nablarch.fw.web.servlet.ServletExecutionContext;
 
-import javax.servlet.ServletRequest;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
+import jakarta.servlet.ServletRequest;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -124,7 +124,7 @@ public class JaxbBodyConverter extends BodyConverterSupport {
      * <ul>
      *     <li>改行、インデントを使用した形式にフォーマットする。</li>
      *     <li>
-     *         文字コードはリソースメソッドの{@link javax.ws.rs.Produces}に設定された文字コードを使用する。<br/>
+     *         文字コードはリソースメソッドの{@link jakarta.ws.rs.Produces}に設定された文字コードを使用する。<br/>
      *         文字コードが設定されていない場合はデフォルトエンコーディングを使用する。
      *     </li>
      * </ul>

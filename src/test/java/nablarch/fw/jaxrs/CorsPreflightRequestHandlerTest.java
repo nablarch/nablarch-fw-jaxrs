@@ -1,7 +1,5 @@
 package nablarch.fw.jaxrs;
 
-import mockit.Expectations;
-import mockit.Mocked;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.jaxrs.cors.Cors;
 import nablarch.fw.web.HttpRequest;
@@ -11,14 +9,15 @@ import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link CorsPreflightRequestHandler}のテスト。
  */
 public class CorsPreflightRequestHandlerTest {
 
-    @Mocked
-    private Cors cors;
+    private final Cors cors = mock(Cors.class);
 
     @Test
     public void preflightRequest() {
@@ -26,12 +25,8 @@ public class CorsPreflightRequestHandlerTest {
         final ExecutionContext context = new ExecutionContext();
         final HttpRequest request = null;
 
-        new Expectations() {{
-            cors.isPreflightRequest(request, context);
-            result = true;
-            cors.createPreflightResponse(request, context);
-            result = new HttpResponse(204);
-        }};
+        when(cors.isPreflightRequest(request, context)).thenReturn(true);
+        when(cors.createPreflightResponse(request, context)).thenReturn(new HttpResponse(204));
 
         CorsPreflightRequestHandler sut = new CorsPreflightRequestHandler();
         sut.setCors(cors);
@@ -48,10 +43,7 @@ public class CorsPreflightRequestHandlerTest {
         final ExecutionContext context = new ExecutionContext();
         final HttpRequest request = null;
 
-        new Expectations() {{
-            cors.isPreflightRequest(request, context);
-            result = false;
-        }};
+        when(cors.isPreflightRequest(request, context)).thenReturn(false);
 
         CorsPreflightRequestHandler sut = new CorsPreflightRequestHandler();
         sut.setCors(cors);

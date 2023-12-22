@@ -1,22 +1,10 @@
 package nablarch.fw.jaxrs;
 
-import static nablarch.fw.jaxrs.HttpResponseMatcher.isStatusCode;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
-import java.util.*;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MediaType;
-
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.core.MediaType;
 import nablarch.common.web.WebConfig;
 import nablarch.core.message.ApplicationException;
 import nablarch.core.message.Message;
@@ -32,14 +20,34 @@ import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
 import nablarch.fw.web.servlet.ServletExecutionContext;
 import nablarch.test.support.log.app.OnMemoryLogWriter;
-
 import org.junit.Before;
 import org.junit.Test;
 
-import mockit.Delegate;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.Verifications;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import static nablarch.fw.jaxrs.HttpResponseMatcher.isStatusCode;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * {@link JaxRsResponseHandler}のテストクラス。
@@ -49,20 +57,15 @@ public class JaxRsResponseHandlerTest {
     /** テスト対象 */
     private JaxRsResponseHandler sut = new JaxRsResponseHandler();
 
-    @Mocked
-    private HttpServletRequest mockServletRequest;
+    private final HttpServletRequest mockServletRequest = mock(HttpServletRequest.class, RETURNS_DEEP_STUBS);
 
-    @Mocked
-    private HttpServletResponse mockServletResponse;
+    private final HttpServletResponse mockServletResponse = mock(HttpServletResponse.class);
 
-    @Mocked
-    private ServletOutputStream mockOutputStream;
+    private final ServletOutputStream mockOutputStream = mock(ServletOutputStream.class);
 
-    @Mocked
-    private ServletContext mockServletContext;
+    private final ServletContext mockServletContext = mock(ServletContext.class);
 
-    @Mocked
-    private HttpRequest mockHttpRequest;
+    private final HttpRequest mockHttpRequest = mock(HttpRequest.class);
 
     private ByteArrayOutputStream responseBody = new ByteArrayOutputStream();
 
@@ -72,26 +75,20 @@ public class JaxRsResponseHandlerTest {
     public void setUp() throws Exception {
         SystemRepository.clear();
         OnMemoryLogWriter.clear();
-        new Expectations() {{
-            mockServletRequest.getContextPath();
-            result = "dummy";
-            minTimes = 0;
-            mockServletRequest.getRequestURI();
-            result = "dummy/users";
-            minTimes = 0;
+        
+        when(mockServletRequest.getContextPath()).thenReturn("dummy");
+        when(mockServletRequest.getRequestURI()).thenReturn("dummy/users");
 
-            ServletOutputStream stream = mockServletResponse.getOutputStream();
-            result = mockOutputStream;
-            minTimes = 0;
-            
-            stream.write(withAny(new byte[0]), anyInt, anyInt);
-            result = new Delegate<Void>() {
-                public void delegate(byte[] b, int offset, int length) {
-                    responseBody.write(b, offset, length);
-                }
-            };
-            minTimes = 0;
-        }};
+        when(mockServletResponse.getOutputStream()).thenReturn(mockOutputStream);
+
+        doAnswer(context -> {
+            byte[] b = context.getArgument(0);
+            int offset = context.getArgument(1);
+            int length = context.getArgument(2);
+            responseBody.write(b, offset, length);
+            return null;
+        }).when(mockOutputStream).write(any(byte[].class), anyInt(), anyInt());
+        
         context = new ServletExecutionContext(mockServletRequest, mockServletResponse, mockServletContext);
     }
 
@@ -109,12 +106,8 @@ public class JaxRsResponseHandlerTest {
                 return new HttpResponse(HttpResponse.Status.CREATED.getStatusCode());
             }
         });
-        new Expectations() {{
-            mockHttpRequest.getMethod();
-            result = "GET";
-            mockHttpRequest.getRequestUri();
-            result = "/api/user";
-        }};
+        when(mockHttpRequest.getMethod()).thenReturn("GET");
+        when(mockHttpRequest.getRequestUri()).thenReturn("/api/user");
 
         // -------------------------------------------------- execute
         HttpResponse response = sut.handle(mockHttpRequest, context);
@@ -123,10 +116,8 @@ public class JaxRsResponseHandlerTest {
         assertThat("201でボディが空のHttpResponseが戻される", response, isStatusCode(201).withEmptyBody());
         assertThat("ServletOutputStreamに書き込まれたボティの長さも0であること",
                 getBodyString(), is(""));
-        new Verifications() {{
-            // servlet responseに201ステータスコードが設定されていること
-            mockServletResponse.setStatus(201);
-        }};
+        // servlet responseに201ステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(201);
     }
 
     /**
@@ -145,12 +136,8 @@ public class JaxRsResponseHandlerTest {
                 return new HttpResponse(HttpResponse.Status.CREATED.getStatusCode());
             }
         });
-        new Expectations() {{
-            mockHttpRequest.getMethod();
-            result = "GET";
-            mockHttpRequest.getRequestUri();
-            result = "/api/user";
-        }};
+        when(mockHttpRequest.getMethod()).thenReturn("GET");
+        when(mockHttpRequest.getRequestUri()).thenReturn("/api/user");
 
         final WebConfig webConfig = new WebConfig();
         webConfig.setAddDefaultContentTypeForNoBodyResponse(true);
@@ -170,12 +157,10 @@ public class JaxRsResponseHandlerTest {
         assertThat("201でボディが空のHttpResponseが戻される", response, isStatusCode(201).withEmptyBody());
         assertThat("ServletOutputStreamに書き込まれたボティの長さも0であること",
                 getBodyString(), is(""));
-        new Verifications() {{
-            // servlet responseに201ステータスコードが設定されていること
-            mockServletResponse.setStatus(201);
-
-            mockServletResponse.setContentType("text/plain;charset=UTF-8");
-        }};
+        
+        // servlet responseに201ステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(201);
+        verify(mockServletResponse, atLeastOnce()).setContentType("text/plain;charset=UTF-8");
     }
 
     /**
@@ -203,13 +188,12 @@ public class JaxRsResponseHandlerTest {
         assertThat("201でボディが空のHttpResponseが戻される", response, isStatusCode(200).withBody(json));
         assertThat("ServletOutputStreamにHttpResponseのbodyが書き込まれていること",
                 getBodyString(), is(json));
-        new Verifications() {{
-            // servlet responseに200のステータスコードが設定されていること
-            mockServletResponse.setStatus(200);
-            // Content-Length及びContent-Typeが設定されていること
-            mockServletResponse.setContentLength(json.length());
-            mockServletResponse.setContentType("application/json; charset=utf-8");
-        }};
+        
+        // servlet responseに200のステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(200);
+        // Content-Length及びContent-Typeが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setContentLength(json.length());
+        verify(mockServletResponse, atLeastOnce()).setContentType("application/json; charset=utf-8");
     }
 
     /**
@@ -238,15 +222,14 @@ public class JaxRsResponseHandlerTest {
         assertThat("200で書き込んだボディであること", response, isStatusCode(200).withBody(text));
         assertThat("ServletOutputStreamにHttpResponseのbodyが書き込まれていること",
                 getBodyString(), is(text));
-        new Verifications() {{
-            // servlet responseに200のステータスコードが設定されていること
-            mockServletResponse.setStatus(200);
-            // Content-Length及びContent-Typeが正しいこと
-            mockServletResponse.setContentLength(text.length());
-            mockServletResponse.setContentType("text/plain");
-            // 任意のヘッダーの書き込みも行われていいること
-            mockServletResponse.setHeader("option", "value");
-        }};
+        
+        // servlet responseに200のステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(200);
+        // Content-Length及びContent-Typeが正しいこと
+        verify(mockServletResponse, atLeastOnce()).setContentLength(text.length());
+        verify(mockServletResponse, atLeastOnce()).setContentType("text/plain");
+        // 任意のヘッダーの書き込みも行われていいること
+        verify(mockServletResponse, atLeastOnce()).setHeader("option", "value");
     }
 
     /**
@@ -278,14 +261,12 @@ public class JaxRsResponseHandlerTest {
         assertThat("400でボディが空のHttpResponseが戻される", response, isStatusCode(400).withBody(errorMessage));
         assertThat("ServletOutputStreamにHttpResponseのbodyが書き込まれていること",
                 getBodyString(), is(errorMessage));
-        new Verifications() {{
-            // servlet responseに200のステータスコードが設定されていること
-            mockServletResponse.setStatus(400);
-            // Content-Length及びContent-Typeが正しいこと
-            mockServletResponse.setContentLength(errorMessage.getBytes(Charset.forName("utf-8")).length);
-            mockServletResponse.setContentType("text/plain");
-        }};
 
+        // servlet responseに200のステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(400);
+        // Content-Length及びContent-Typeが正しいこと
+        verify(mockServletResponse, atLeastOnce()).setContentLength(errorMessage.getBytes(Charset.forName("utf-8")).length);
+        verify(mockServletResponse, atLeastOnce()).setContentType("text/plain");
     }
 
     /**
@@ -334,10 +315,9 @@ public class JaxRsResponseHandlerTest {
         assertThat("400でボディが空のHttpResponseが戻される", response, isStatusCode(400).withEmptyBody());
         assertThat("ServletOutputStreamに書き込まれたボティの長さも0であること",
                 getBodyString(), is(""));
-        new Verifications() {{
-            // servlet responseに400のステータスコードが設定されていること
-            mockServletResponse.setStatus(400);
-        }};
+
+        // servlet responseに400のステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(400);
     }
 
     /**
@@ -384,10 +364,9 @@ public class JaxRsResponseHandlerTest {
         assertThat("400でボディが空のHttpResponseが戻される", response, isStatusCode(400).withEmptyBody());
         assertThat("ServletOutputStreamに書き込まれたボティの長さも0であること",
                 getBodyString(), is(""));
-        new Verifications() {{
-            // servlet responseに400のステータスコードが設定されていること
-            mockServletResponse.setStatus(400);
-        }};
+
+        // servlet responseに400のステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(400);
 
         // ログ書き込みに失敗したのでFATALログが出力されること。
         OnMemoryLogWriter.assertLogContains("writer.memory",
@@ -421,10 +400,9 @@ public class JaxRsResponseHandlerTest {
         assertThat("500でボディが空のHttpResponseが戻される", response, isStatusCode(500).withEmptyBody());
         assertThat("ServletOutputStreamに書き込まれたボティの長さも0であること",
                 getBodyString(), is(""));
-        new Verifications() {{
-            // servlet responseに500のステータスコードが設定されていること
-            mockServletResponse.setStatus(500);
-        }};
+
+        // servlet responseに500のステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(500);
 
         // ログに障害通知と障害解析のログが出力されること
         OnMemoryLogWriter.assertLogContains("writer.memory", "FATAL monitor", "FATAL ROO");
@@ -444,12 +422,8 @@ public class JaxRsResponseHandlerTest {
             }
         });
 
-        new Expectations() {{
-            ServletOutputStream stream = mockServletResponse.getOutputStream();
-            result = mockOutputStream;
-            stream.write(withAny(new byte[0]), anyInt, anyInt);
-            result = new IOException("io error");
-        }};
+        when(mockServletResponse.getOutputStream()).thenReturn(mockOutputStream);
+        doThrow(new IOException("io error")).when(mockOutputStream).write(any(byte[].class), anyInt(), anyInt());
 
         // -------------------------------------------------- execute
         HttpResponse response = sut.handle(mockHttpRequest, context);
@@ -489,11 +463,10 @@ public class JaxRsResponseHandlerTest {
         assertThat("500でビルダーが作成したレスポンスが書き込まれること", response, isStatusCode(500).withBody(body));
         assertThat("ServletOutputStreamに書き込まれたボティの長さも0であること",
                 getBodyString(), is(body));
-        new Verifications() {{
-            // servlet responseに500のステータスコードが設定されていること
-            mockServletResponse.setStatus(500);
-            mockServletResponse.setContentType(MediaType.APPLICATION_JSON);
-        }};
+
+        // servlet responseに500のステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(500);
+        verify(mockServletResponse, atLeastOnce()).setContentType(MediaType.APPLICATION_JSON);
 
         // ログに障害通知と障害解析のログが出力されること
         OnMemoryLogWriter.assertLogContains("writer.memory", "FATAL monitor", "FATAL ROO");
@@ -526,10 +499,9 @@ public class JaxRsResponseHandlerTest {
         assertThat("500でボディが空のHttpResponseが戻される", response, isStatusCode(500).withEmptyBody());
         assertThat("ServletOutputStreamに書き込まれたボティの長さも0であること",
                 getBodyString(), is(""));
-        new Verifications() {{
-            // servlet responseに500のステータスコードが設定されていること
-            mockServletResponse.setStatus(500);
-        }};
+
+        // servlet responseに500のステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(500);
 
         // ログに障害通知と障害解析のログが出力されること
         OnMemoryLogWriter.assertLogContains("writer.memory", "FATAL monitor", "FATAL ROO", "WARN");
@@ -577,12 +549,9 @@ public class JaxRsResponseHandlerTest {
                 return new HttpResponse(HttpResponse.Status.CREATED.getStatusCode());
             }
         });
-        new Expectations() {{
-            mockHttpRequest.getMethod();
-            result = "GET";
-            mockHttpRequest.getRequestUri();
-            result = "/api/user";
-        }};
+
+        when(mockHttpRequest.getMethod()).thenReturn("GET");
+        when(mockHttpRequest.getRequestUri()).thenReturn("/api/user");
 
         // -------------------------------------------------- execute
         sut.setResponseFinishers(Arrays.asList(
@@ -607,12 +576,10 @@ public class JaxRsResponseHandlerTest {
                 getBodyString(), is(""));
         assertThat(response.getHeader("test1"), is("aaa"));
         assertThat(response.getHeader("test2"), is("bbb"));
-        new Verifications() {{
-            // servlet responseに201ステータスコードが設定されていること
-            mockServletResponse.setStatus(201);
 
-            mockServletResponse.setContentType(null); times=0;
-        }};
+        // servlet responseに201ステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(201);
+        verify(mockServletResponse, never()).setContentType(null);
     }
 
     /**
@@ -640,10 +607,8 @@ public class JaxRsResponseHandlerTest {
         assertThat("ボディが空の200であること", response, isStatusCode(200).withEmptyBody());
         assertThat("ボディが空であること", getBodyString(), is(""));
 
-        new Verifications() {{
-            // servlet responseに500のステータスコードが設定されていること
-            mockServletResponse.setStatus(200);
-        }};
+        // servlet responseに500のステータスコードが設定されていること
+        verify(mockServletResponse, atLeastOnce()).setStatus(200);
     }
 
     /**

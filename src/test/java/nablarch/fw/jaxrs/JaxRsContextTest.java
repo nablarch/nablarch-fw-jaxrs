@@ -5,11 +5,11 @@ import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
 import org.junit.Test;
 
-import javax.validation.Valid;
-import javax.validation.groups.ConvertGroup;
-import javax.validation.groups.Default;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
+import jakarta.validation.Valid;
+import jakarta.validation.groups.ConvertGroup;
+import jakarta.validation.groups.Default;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.Produces;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.nullValue;

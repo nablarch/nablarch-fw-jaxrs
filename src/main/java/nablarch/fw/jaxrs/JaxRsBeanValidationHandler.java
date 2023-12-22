@@ -1,8 +1,8 @@
 package nablarch.fw.jaxrs;
 
-import javax.validation.Valid;
-import javax.validation.groups.ConvertGroup;
-import javax.validation.groups.Default;
+import jakarta.validation.Valid;
+import jakarta.validation.groups.ConvertGroup;
+import jakarta.validation.groups.Default;
 
 import nablarch.core.message.ApplicationException;
 import nablarch.core.validation.ee.ValidatorUtil;
