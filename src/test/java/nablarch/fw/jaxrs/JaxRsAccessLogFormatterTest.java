@@ -1,6 +1,7 @@
 package nablarch.fw.jaxrs;
 
 import nablarch.core.ThreadContext;
+import nablarch.core.log.Logger;
 import nablarch.fw.jaxrs.JaxRsAccessLogFormatter.JaxRsAccessLogContext;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
@@ -632,7 +633,7 @@ public class JaxRsAccessLogFormatterTest {
 
             String actual = sut.formatBegin(logContext);
 
-            assertThat(actual, is("[{\n\t\tparam1 = [value1],\n\t\tparam2 = [value2]}]"));
+            assertThat(actual, is("[{" + Logger.LS + "\t\tparam1 = [value1]," + Logger.LS + "\t\tparam2 = [value2]}]"));
         }
 
         /**
@@ -814,7 +815,7 @@ public class JaxRsAccessLogFormatterTest {
 
             String actual = sut.formatBegin(logContext);
 
-            assertThat(actual, is("[{\n\t\tparam1 = [value1],\n\t\tparam2 = [value2]}]"));
+            assertThat(actual, is("[{" + Logger.LS + "\t\tparam1 = [value1]," + Logger.LS + "\t\tparam2 = [value2]}]"));
         }
 
         /**
@@ -1312,11 +1313,11 @@ public class JaxRsAccessLogFormatterTest {
             String actual = sut.formatBegin(logContext);
 
             assertThat(actual, is("@@@@ BEGIN @@@@ rid = [testRequestId] uid = [testUserId] sid = [testSessionId]"
-                    + "\n\turl         = [http://localhost]"
-                    + "\n\tmethod      = [GET]"
-                    + "\n\tport        = [8080]"
-                    + "\n\tclient_ip   = [192.168.0.0]"
-                    + "\n\tclient_host = [localhost]"));
+                    + Logger.LS + "\turl         = [http://localhost]"
+                    + Logger.LS + "\tmethod      = [GET]"
+                    + Logger.LS + "\tport        = [8080]"
+                    + Logger.LS + "\tclient_ip   = [192.168.0.0]"
+                    + Logger.LS + "\tclient_host = [localhost]"));
         }
 
         /**
@@ -1347,11 +1348,11 @@ public class JaxRsAccessLogFormatterTest {
             String actual = sut.formatEnd(logContext);
 
             assertThat(actual, is("@@@@ END @@@@ rid = [testRequestId] uid = [testUserId] sid = [testSessionId] url = [http://localhost] status_code = [200]"
-                    + "\n\tstart_time     = [2023-12-31 00:00:00.000]"
-                    + "\n\tend_time       = [2024-01-01 00:00:00.000]"
-                    + "\n\texecution_time = [" + 1000 * 60 * 60 * 24 + "]"
-                    + "\n\tmax_memory     = [999]"
-                    + "\n\tfree_memory    = [1]"));
+                    + Logger.LS + "\tstart_time     = [2023-12-31 00:00:00.000]"
+                    + Logger.LS + "\tend_time       = [2024-01-01 00:00:00.000]"
+                    + Logger.LS + "\texecution_time = [" + 1000 * 60 * 60 * 24 + "]"
+                    + Logger.LS + "\tmax_memory     = [999]"
+                    + Logger.LS + "\tfree_memory    = [1]"));
         }
 
     }
