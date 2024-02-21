@@ -1,17 +1,19 @@
 package nablarch.fw.jaxrs;
 
 import nablarch.core.beans.BeanUtil;
+import nablarch.core.util.annotation.Published;
 import nablarch.core.validation.ee.ValidatorUtil;
 import nablarch.fw.web.HttpRequest;
 
 /**
  * JAX-RS用のBean関連処理に使用するユーティリティ。
  */
-public final class JaxRsBeanUtil {
+@Published
+public final class JaxRsRequestUtil {
     
 
     /** 隠蔽コンストラクタ */
-    private JaxRsBeanUtil() {
+    private JaxRsRequestUtil() {
     }
 
     /**

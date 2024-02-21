@@ -5,8 +5,8 @@
     xsi:schemaLocation="http://tis.co.jp/nablarch/component-configuration http://tis.co.jp/nablarch/component-configuration.xsd">
 
   <component name="messageInterpolator"
-             class="nablarch.fw.jaxrs.JaxRsBeanUtilTest$CustomMessageInterpolator"/>
+             class="nablarch.fw.jaxrs.JaxRsRequestUtilTest$CustomMessageInterpolator"/>
 
-  <component name="validatorFactoryBuilder" class="nablarch.fw.jaxrs.JaxRsBeanUtilTest$CustomValidationFactoryBuilder" />
+  <component name="validatorFactoryBuilder" class="nablarch.fw.jaxrs.JaxRsRequestUtilTest$CustomValidationFactoryBuilder" />
 
 </component-configuration>

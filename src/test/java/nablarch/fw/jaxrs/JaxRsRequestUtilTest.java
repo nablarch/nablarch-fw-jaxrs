@@ -28,13 +28,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
 /**
- * {@link JaxRsBeanUtil}のテスト。
+ * {@link JaxRsRequestUtil}のテスト。
  */
-public class JaxRsBeanUtilTest {
+public class JaxRsRequestUtilTest {
 
     @ClassRule
     public static SystemRepositoryResource resource = new SystemRepositoryResource(
-            "nablarch/fw/jaxrs/JaxRsBeanUtil.xml");
+            "nablarch/fw/jaxrs/JaxRsRequestUtil.xml");
     
     /**
      * HTTPリクエストからBeanが生成され、バリデーションエラーが発生しないこと
@@ -44,19 +44,19 @@ public class JaxRsBeanUtilTest {
         HttpRequest req = new MockHttpRequest()
                 .setParam("id", "1")
                 .setParam("name", "山田太郎");
-        Person person = JaxRsBeanUtil.getValidatedBean(Person.class, req);
+        Person person = JaxRsRequestUtil.getValidatedBean(Person.class, req);
         assertThat(person.getId(), is(1L));
         assertThat(person.getName(), is("山田太郎"));
     }
 
     /**
-     * HTTPリクエストからBeanが生成され、バリデーションエラーが発生しないこと
+     * HTTPリクエストからBeanが生成され、バリデーションエラーが発生すること
      */
     @Test
     public void testGetValidatedBean_FailedValidation () {
         HttpRequest req = new MockHttpRequest().setParam("id", "1");
         try {
-            JaxRsBeanUtil.getValidatedBean(Person.class, req);
+            JaxRsRequestUtil.getValidatedBean(Person.class, req);
             Assert.fail("とおらない");
         } catch (ApplicationException e) {
             List<Message> messages = e.getMessages();
@@ -73,7 +73,7 @@ public class JaxRsBeanUtilTest {
     @Test
     public void testGetPathParam_Success () {
         HttpRequest req = new MockHttpRequest().setParam("paramName", "param1", "param2");
-        assertThat(JaxRsBeanUtil.getPathParam(req,"paramName"),  is("param1"));
+        assertThat(JaxRsRequestUtil.getPathParam(req,"paramName"),  is("param1"));
     }
 
     /**
@@ -82,7 +82,7 @@ public class JaxRsBeanUtilTest {
     @Test
     public void testGetPathParam_ParamIsEmpty () {
         HttpRequest req = new MockHttpRequest().setParam("paramName");
-        assertThat(JaxRsBeanUtil.getPathParam(req,"paramName"),  nullValue());
+        assertThat(JaxRsRequestUtil.getPathParam(req,"paramName"),  nullValue());
     }
 
     /**
@@ -91,7 +91,7 @@ public class JaxRsBeanUtilTest {
     @Test
     public void testGetPathParam_ParamIsNotExist () {
         HttpRequest req = new MockHttpRequest();
-        assertThat(JaxRsBeanUtil.getPathParam(req,"paramName"),  nullValue());
+        assertThat(JaxRsRequestUtil.getPathParam(req,"paramName"),  nullValue());
     }
     
     /**
