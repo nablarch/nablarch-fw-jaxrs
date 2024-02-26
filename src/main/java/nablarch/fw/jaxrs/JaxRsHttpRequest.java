@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * JAX-RS用の{@link HttpRequest}クラス。
  */
-public class JaxRsHttpRequest  extends HttpRequest {
+public class JaxRsHttpRequest extends HttpRequest {
 
     private final HttpRequest request;
 
