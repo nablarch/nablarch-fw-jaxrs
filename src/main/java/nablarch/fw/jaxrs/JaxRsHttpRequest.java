@@ -12,6 +12,8 @@ import java.util.Map;
 
 /**
  * JAX-RS用の{@link HttpRequest}クラス。
+ * <p/>
+ * {@link JaxRsHttpRequest#getParamMap()}、{@link JaxRsHttpRequest#getParam(String)} を公開APIとし、それ以外のメソッドは保持するHttpRequestに委譲している。
  */
 public class JaxRsHttpRequest extends HttpRequest {
 
@@ -19,6 +21,30 @@ public class JaxRsHttpRequest extends HttpRequest {
 
     public JaxRsHttpRequest(HttpRequest request) {
         this.request = request;
+    }
+
+    @Override
+    @Published
+    public Map<String, String[]> getParamMap() {
+        return request.getParamMap();
+    }
+
+    @Override
+    @Published
+    public String[] getParam(String name) {
+        return request.getParam(name);
+    }
+
+    /**
+     * HTTPリクエストからパスパラメータを取得する。
+     *
+     * @param name パラメータ名
+     * @return パラメータの値
+     */
+    @Published
+    public String getPathParam(String name) {
+        String[] params = request.getParam(name);
+        return params == null || params.length == 0 ? null : params[0];
     }
 
     @Override
@@ -51,30 +77,6 @@ public class JaxRsHttpRequest extends HttpRequest {
         return request.getHttpVersion();
     }
 
-    @Override
-    @Published
-    public Map<String, String[]> getParamMap() {
-        return request.getParamMap();
-    }
-
-    @Override
-    @Published
-    public String[] getParam(String name) {
-        return request.getParam(name);
-    }
-
-    /**
-     * HTTPリクエストからパスパラメータを取得する。
-     *
-     * @param name パラメータ名
-     * @return パラメータの値
-     */
-    @Published
-    public String getPathParam(String name) {
-        String[] params = request.getParam(name);
-        return params == null || params.length == 0 ? null : params[0];
-    }
-    
     @Override
     public HttpRequest setParam(String name, String... params) {
         return request.setParam(name, params);
