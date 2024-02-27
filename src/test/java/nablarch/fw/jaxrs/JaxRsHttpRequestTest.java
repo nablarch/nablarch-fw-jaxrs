@@ -2,10 +2,14 @@ package nablarch.fw.jaxrs;
 
 import nablarch.fw.web.MockHttpCookie;
 import nablarch.fw.web.MockHttpRequest;
+import nablarch.fw.web.upload.PartInfo;
+import nablarch.fw.web.useragent.UserAgent;
 import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -29,6 +33,46 @@ public class JaxRsHttpRequestTest {
         assertThat(sut.getMethod(), is("GET"));
     }
 
+    /**
+     * HTTPリクエストURIを取得できることを確認
+     */
+    @Test
+    public void testGetRequestUri() {
+        JaxRsHttpRequest sut = new JaxRsHttpRequest(new MockHttpRequest());
+        assertThat(sut.getRequestUri(), is("/"));
+    }
+
+    /**
+     * HTTPリクエストURIを設定できることを確認
+     */
+    @Test
+    public void testSetRequestUri() {
+        JaxRsHttpRequest sut = new JaxRsHttpRequest(new MockHttpRequest());
+        sut.setRequestUri("/requestUri");
+        assertThat(sut.getRequestUri(), is("/requestUri"));
+    }
+
+    /**
+     * HTTPリクエストURIのパス部分が取得できることを確認
+     */
+    @Test
+    public void testGetRequestPath() {
+        JaxRsHttpRequest sut = new JaxRsHttpRequest(new MockHttpRequest()
+                .setRequestUri("/requestPath?paramName1=param1&paramName2=param2"));
+        assertThat(sut.getRequestPath(), is("/requestPath"));
+    }
+
+    /**
+     * リクエストパスを設定できることを確認
+     */
+    @Test
+    public void testSetRequestPath() {
+        JaxRsHttpRequest sut = new JaxRsHttpRequest(new MockHttpRequest()
+                .setRequestUri("/requestUri?paramName1=param1&paramName2=param2"));
+        sut.setRequestPath("/requestPath");
+        assertThat(sut.getRequestUri(), is("/requestPath?paramName1=param1&paramName2=param2"));
+    }
+    
     /**
      * HTTPバージョンを取得できることを確認
      */
@@ -116,7 +160,6 @@ public class JaxRsHttpRequestTest {
         assertThat(sut.getParamMap(), sameInstance(params));
     }
 
-
     /**
      * ヘッダのMapを取得できることを確認
      */
@@ -128,7 +171,6 @@ public class JaxRsHttpRequestTest {
                 }}));
         assertThat(sut.getHeaderMap().get("key"), is("value"));
     }
-
 
     /**
      * ヘッダを取得できることを確認
@@ -143,6 +185,15 @@ public class JaxRsHttpRequestTest {
     }
 
     /**
+     * HTTPリクエストのホストヘッダを取得できることを確認
+     */
+    @Test
+    public void testGetHost() {
+        JaxRsHttpRequest sut = new JaxRsHttpRequest(new MockHttpRequest().setHost("host"));
+        assertThat(sut.getHost(), is("host"));
+    }
+
+    /**
      * Cookieを取得できることを確認
      */
     @Test
@@ -153,4 +204,73 @@ public class JaxRsHttpRequestTest {
         assertThat(sut.getCookie().get("key"), is("value"));
     }
 
+    /**
+     * マルチパートの一部を取得できることを確認
+     */
+    @Test
+    public void testGetPart() {
+        final MockHttpRequest request = new MockHttpRequest();
+        request.setMultipart(new HashMap<String, List<PartInfo>>() {{
+            put("key", new ArrayList<PartInfo>() {{
+                add(PartInfo.newInstance("name"));
+            }});
+        }});
+        JaxRsHttpRequest sut = new JaxRsHttpRequest(request);
+        List<PartInfo> result = sut.getPart("key");
+        assertThat(result.size(), is(1));
+        assertThat(result.get(0).getName(), is("name"));
+
+    }
+
+    /**
+     * マルチパートを設定できることを確認
+     */
+    @Test
+    public void testSetMultipart() {
+        JaxRsHttpRequest sut = new JaxRsHttpRequest(new MockHttpRequest());
+        assertThat(sut.getMultipart().size(), is(0));
+        sut.setMultipart(new HashMap<String, List<PartInfo>>() {{
+            put("key", new ArrayList<PartInfo>() {{
+                add(PartInfo.newInstance("name"));
+            }});
+        }});
+        Map<String, List<PartInfo>> result = sut.getMultipart();
+        assertThat(result.size(), is(1));
+        assertThat(result.get("key").size(), is(1));
+        assertThat(result.get("key").get(0).getName(), is("name"));
+    }
+
+    /**
+     * 本HTTPリクエストの全マルチパートを取得できることを確認
+     */
+    @Test
+    public void testGetMultipart() {
+        MockHttpRequest request = new MockHttpRequest();
+        request.setMultipart(new HashMap<String, List<PartInfo>>() {{
+            put("key", new ArrayList<PartInfo>() {{
+                add(PartInfo.newInstance("name"));
+            }});
+        }});
+        JaxRsHttpRequest sut = new JaxRsHttpRequest(request);
+        Map<String, List<PartInfo>> result = sut.getMultipart();
+        assertThat(result.size(), is(1));
+        assertThat(result.get("key").size(), is(1));
+        assertThat(result.get("key").get(0).getName(), is("name"));
+
+    }
+
+    /**
+     * UserAgent情報を取得できることを確認
+     */
+    @Test
+    public void testGetUserAgent() {
+        JaxRsHttpRequest sut = new JaxRsHttpRequest(new MockHttpRequest());
+        UserAgent result  = sut.getUserAgent();
+        assertThat(result.getBrowserType(), is("UnknownType"));
+        assertThat(result.getBrowserName(), is("UnknownName"));
+        assertThat(result.getBrowserVersion(), is("UnknownVersion"));
+        assertThat(result.getOsType(), is("UnknownType"));
+        assertThat(result.getOsName(), is("UnknownName"));
+        assertThat(result.getOsVersion(), is("UnknownVersion"));
+    }
 }
