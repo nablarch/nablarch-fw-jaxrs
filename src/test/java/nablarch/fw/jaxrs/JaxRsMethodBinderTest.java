@@ -2,8 +2,8 @@ package nablarch.fw.jaxrs;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.lang.annotation.ElementType;
@@ -39,6 +39,7 @@ import mockit.Mocked;
  */
 public class JaxRsMethodBinderTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
@@ -56,8 +57,6 @@ public class JaxRsMethodBinderTest {
 
     /**
      * 指定したメソッドがバインドされて正常に実行されるケース。
-     *
-     * @throws Exception
      */
     @Test
     public void testBind_success() throws Exception {
@@ -71,6 +70,11 @@ public class JaxRsMethodBinderTest {
         wrapper = sut.bind(new TestAction());
         assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
         assertThat("指定したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("request only"));
+
+        sut = new JaxRsMethodBinder("jaxRsRequestOnly", dummyHandlers);
+        wrapper = sut.bind(new TestAction());
+        assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
+        assertThat("指定したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("jaxRsRequest only"));
 
         sut = new JaxRsMethodBinder("contextOnly", dummyHandlers);
         wrapper = sut.bind(new TestAction());
@@ -101,8 +105,6 @@ public class JaxRsMethodBinderTest {
 
     /**
      * カスタムの{@link JaxRsHandlerListFactory}を使用するケース。
-     *
-     * @throws Exception
      */
     @Test
     public void testBind_customJaxRsHandlerListFactory() throws Exception {
@@ -129,8 +131,6 @@ public class JaxRsMethodBinderTest {
 
     /**
      * 指定したメソッド名と同一の名前のメソッドがクラス内に複数定義されているケース。
-     *
-     * @throws Exception
      */
     @Test
     public void testBind_methodNameDuplicated() throws Exception {
@@ -145,8 +145,6 @@ public class JaxRsMethodBinderTest {
 
     /**
      * 指定したメソッドがクラス内に定義されていないケース。
-     *
-     * @throws Exception
      */
     @Test
     public void testBind_methodUndefined() throws Exception {
@@ -176,8 +174,6 @@ public class JaxRsMethodBinderTest {
 
     /**
      * 指定したメソッドが不正なケース。
-     *
-     * @throws Exception
      */
     @Test
     public void testBind_signatureInvalid_combination() throws Exception {
@@ -208,8 +204,6 @@ public class JaxRsMethodBinderTest {
 
     /**
      * 指定したメソッドが不正なケース。
-     *
-     * @throws Exception
      */
     @Test
     public void testBind_signatureInvalid_size() throws Exception {
@@ -223,8 +217,6 @@ public class JaxRsMethodBinderTest {
 
     /**
      * 指定したメソッド実行時、{@link RuntimeException}が送出されるケース。
-     *
-     * @throws Exception
      */
     @Test
     public void testBind_throwRuntimeException() throws Exception {
@@ -238,8 +230,6 @@ public class JaxRsMethodBinderTest {
 
     /**
      * 指定したメソッド実行時、{@link Error}が送出されるケース。
-     *
-     * @throws Exception
      */
     @Test
     public void testBind_throwError() throws Exception {
@@ -253,8 +243,6 @@ public class JaxRsMethodBinderTest {
 
     /**
      * 指定したメソッド実行時、{@link Exception}が送出されるケース。
-     *
-     * @throws Exception
      */
     @Test
     public void testBind_throwException() throws Exception {
@@ -268,7 +256,7 @@ public class JaxRsMethodBinderTest {
 
     @Test
     public void userInterceptor() throws Exception {
-        final JaxRsMethodBinder sut = new JaxRsMethodBinder("interceptorTest", Collections.<Handler<HttpRequest, ?>>emptyList());
+        sut = new JaxRsMethodBinder("interceptorTest", Collections.<Handler<HttpRequest, ?>>emptyList());
         final TestAction action = new TestAction();
         final HandlerWrapper<HttpRequest, Object> wrapper = sut.bind(action);
         final HttpResponse result = (HttpResponse) wrapper.handle(req, new ExecutionContext());
@@ -311,6 +299,10 @@ public class JaxRsMethodBinderTest {
 
         public HttpResponse requestOnly(HttpRequest req) {
             return new HttpResponse("request only");
+        }
+
+        public HttpResponse jaxRsRequestOnly(JaxRsHttpRequest req) {
+            return new HttpResponse("jaxRsRequest only");
         }
 
         public HttpResponse contextOnly(ExecutionContext ctx) {
@@ -363,17 +355,18 @@ public class JaxRsMethodBinderTest {
         
         @TestInterceptor
         public void interceptorTest() {
+            // NOP
         }
     }
 
     private static class TestSubAction extends TestAction {}
 
-    @Interceptor(TestInterceptor.Impl.class)
+    @Interceptor(TestInterceptor.TestImpl.class)
     @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface TestInterceptor {
         
-        class Impl extends Interceptor.Impl<Object, HttpResponse, TestInterceptor> {
+        class TestImpl extends Interceptor.Impl<Object, HttpResponse, TestInterceptor> {
             @Override
             public HttpResponse handle(final Object o, final ExecutionContext context) {
                 final Object result = getOriginalHandler().handle(o, context);
@@ -413,6 +406,7 @@ public class JaxRsMethodBinderTest {
 
     public static class PrivateResource {
 
+        @SuppressWarnings("SameReturnValue")
         private HttpResponse method() {
             return null;
         }
