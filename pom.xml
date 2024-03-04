@@ -150,6 +150,11 @@
       <scope>provided</scope>
     </dependency>
 
+    <dependency>
+          <groupId>com.nablarch.framework</groupId>
+          <artifactId>nablarch-testing</artifactId>
+          <scope>test</scope>
+      </dependency>
   </dependencies>
 
 </project>
