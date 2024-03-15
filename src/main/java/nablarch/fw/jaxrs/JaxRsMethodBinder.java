@@ -115,7 +115,7 @@ public class JaxRsMethodBinder implements MethodBinder<HttpRequest, Object> {
             final List<ParameterType> result = new ArrayList<ParameterType>(3);
             for (Class<?> type : resourceMethod.getParameterTypes()) {
                 final ParameterType parameterType;
-                if (type.equals(HttpRequest.class)) {
+                if (type.equals(HttpRequest.class) || type.equals(JaxRsHttpRequest.class) ) {
                     parameterType = ParameterType.HTTP_REQUEST;
                 } else if (type.equals(ExecutionContext.class)) {
                     parameterType = ParameterType.CONTEXT;
@@ -142,7 +142,7 @@ public class JaxRsMethodBinder implements MethodBinder<HttpRequest, Object> {
             final List<Object> params = new ArrayList<Object>();
             for (ParameterType paramType : parameterTypes) {
                 if (paramType == ParameterType.HTTP_REQUEST) {
-                    params.add(request);
+                    params.add(new JaxRsHttpRequest(request));
                 } else if (paramType == ParameterType.CONTEXT) {
                     params.add(context);
                 } else {

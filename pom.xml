@@ -5,7 +5,7 @@
 
   <groupId>com.nablarch.framework</groupId>
   <artifactId>nablarch-fw-jaxrs</artifactId>
-  <version>1.3.0</version>
+  <version>1.4.0</version>
 
   <scm>
     <connection>scm:git:git://github.com/nablarch/${project.artifactId}.git</connection>
@@ -16,7 +16,7 @@
   <parent>
     <groupId>com.nablarch</groupId>
     <artifactId>nablarch-parent</artifactId>
-    <version>5u23</version>
+    <version>5u24</version>
   </parent>
 
   <profiles>
@@ -167,6 +167,12 @@
           <artifactId>nablarch-fw-jaxrs</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>com.nablarch.framework</groupId>
+      <artifactId>nablarch-testing</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>
