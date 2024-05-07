@@ -1,6 +1,7 @@
 package nablarch.fw.jaxrs;
 
 import nablarch.core.beans.BeanUtil;
+import nablarch.core.util.annotation.Published;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
@@ -18,6 +19,7 @@ import java.util.Map;
  *
  * @author Kiyohito Itoh
  */
+@Published(tag = "architect")
 public class FormUrlEncodedConverter extends BodyConverterSupport {
 
     @Override

@@ -8,6 +8,7 @@ import java.util.Map;
 import nablarch.core.log.Logger;
 import nablarch.core.log.LoggerManager;
 import nablarch.core.util.StringUtil;
+import nablarch.core.util.annotation.Published;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpErrorResponse;
 import nablarch.fw.web.HttpRequest;
@@ -20,6 +21,7 @@ import nablarch.fw.web.HttpResponse.Status;
  *
  * @author Kiyohito Itoh
  */
+@Published(tag = "architect")
 public class BodyConvertHandler implements HttpRequestHandler {
 
     /** ロガー */
