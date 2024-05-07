@@ -76,7 +76,7 @@ public class FormUrlEncodedConverter extends BodyConverterSupport {
     }
 
     /**
-     * レスポンスオブジェクトを{@link MultivaluedMap<String, String>}にキャストする。
+     * レスポンスオブジェクトを{@link MultivaluedMap}にキャストする。
      * <p>
      * キャストできない場合は{@link IllegalStateException}をスローする。
      *
@@ -84,6 +84,7 @@ public class FormUrlEncodedConverter extends BodyConverterSupport {
      * @param context {@link JaxRsContext}
      * @return キャスト後のオブジェクト
      */
+    @SuppressWarnings("unchecked")
     private MultivaluedMap<String, String> castResponse(Object response, JaxRsContext context) {
         try {
             return (MultivaluedMap<String, String>) response;
