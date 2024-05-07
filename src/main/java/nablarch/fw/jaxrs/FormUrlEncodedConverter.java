@@ -70,14 +70,14 @@ public class FormUrlEncodedConverter extends BodyConverterSupport {
     private String encode(String str, Charset encoding) {
         try {
             return URLEncoder.encode(str, encoding.name());
-        } catch (UnsupportedEncodingException ignore) {
-            throw new RuntimeException(ignore); // not happened.
+        } catch (UnsupportedEncodingException uee) {
+            throw new RuntimeException(uee); // not happened.
         }
     }
 
     /**
      * レスポンスオブジェクトを{@link MultivaluedMap<String, String>}にキャストする。
-     *
+     * <p>
      * キャストできない場合は{@link IllegalStateException}をスローする。
      *
      * @param response レスポンスオブジェクト
