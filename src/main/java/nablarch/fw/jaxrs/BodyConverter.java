@@ -1,5 +1,6 @@
 package nablarch.fw.jaxrs;
 
+import nablarch.core.util.annotation.Published;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
@@ -9,6 +10,7 @@ import nablarch.fw.web.HttpResponse;
  *
  * @author Naoki Yamamoto
  */
+@Published(tag = "architect")
 public interface BodyConverter {
 
     /**
