@@ -8,6 +8,7 @@ import java.util.Map;
 import nablarch.core.log.Logger;
 import nablarch.core.log.LoggerManager;
 import nablarch.core.util.StringUtil;
+import nablarch.core.util.annotation.Published;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpErrorResponse;
 import nablarch.fw.web.HttpRequest;
@@ -20,6 +21,7 @@ import nablarch.fw.web.HttpResponse.Status;
  *
  * @author Kiyohito Itoh
  */
+@Published(tag = "architect")
 public class BodyConvertHandler implements HttpRequestHandler {
 
     /** ロガー */
@@ -83,7 +85,7 @@ public class BodyConvertHandler implements HttpRequestHandler {
 
     /**
      * {@link EntityResponse}からコンバートされた{@link HttpResponse}にコピーする。
-     *
+     * <p>
      * レスポンスヘッダとステータスコードをコピーする。
      * レスポンスヘッダは上書きしない。
      * ステータスコードは指定された場合のみコピーする。
@@ -109,7 +111,7 @@ public class BodyConvertHandler implements HttpRequestHandler {
 
     /**
      * メディアタイプを変換するための{@link BodyConverter}を取得する。
-     *
+     * <p>
      * 変換対象の{@link BodyConverter}が存在しない場合は、{@link Status#UNSUPPORTED_MEDIA_TYPE}を持つ{@link HttpErrorResponse}を送出する。
      *
      * @param mediaType メディアタイプ
@@ -145,7 +147,7 @@ public class BodyConvertHandler implements HttpRequestHandler {
 
     /**
      * HTTPヘッダーのContent-Typeに指定されたメディアタイプをサポートしているかを判定する。
-     *
+     * <p>
      * 以下の場合のみサポートしていると判定する。
      * <pre>
      * ・Content-Typeが指定され、かつメディアタイプと一致する場合。（GET以外の場合を想定）
@@ -166,7 +168,7 @@ public class BodyConvertHandler implements HttpRequestHandler {
 
     /**
      * {@link BodyConverter}のリストを設定する。
-     *
+     * <p>
      * 既に設定されていた{@link BodyConverter}のリストは破棄される。
      *
      * @param bodyConverters {@link BodyConverter}

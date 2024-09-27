@@ -1,6 +1,7 @@
 package nablarch.fw.jaxrs;
 
 import nablarch.core.beans.BeanUtil;
+import nablarch.core.util.annotation.Published;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
@@ -18,6 +19,7 @@ import java.util.Map;
  *
  * @author Kiyohito Itoh
  */
+@Published(tag = "architect")
 public class FormUrlEncodedConverter extends BodyConverterSupport {
 
     @Override
@@ -68,20 +70,21 @@ public class FormUrlEncodedConverter extends BodyConverterSupport {
     private String encode(String str, Charset encoding) {
         try {
             return URLEncoder.encode(str, encoding.name());
-        } catch (UnsupportedEncodingException ignore) {
-            throw new RuntimeException(ignore); // not happened.
+        } catch (UnsupportedEncodingException uee) {
+            throw new RuntimeException(uee); // not happened.
         }
     }
 
     /**
-     * レスポンスオブジェクトを{@link MultivaluedMap<String, String>}にキャストする。
-     *
+     * レスポンスオブジェクトを{@link MultivaluedMap}にキャストする。
+     * <p>
      * キャストできない場合は{@link IllegalStateException}をスローする。
      *
      * @param response レスポンスオブジェクト
      * @param context {@link JaxRsContext}
      * @return キャスト後のオブジェクト
      */
+    @SuppressWarnings("unchecked")
     private MultivaluedMap<String, String> castResponse(Object response, JaxRsContext context) {
         try {
             return (MultivaluedMap<String, String>) response;
