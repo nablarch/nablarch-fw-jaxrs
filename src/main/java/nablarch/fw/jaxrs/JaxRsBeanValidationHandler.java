@@ -5,6 +5,7 @@ import jakarta.validation.groups.ConvertGroup;
 import jakarta.validation.groups.Default;
 
 import nablarch.core.message.ApplicationException;
+import nablarch.core.util.annotation.Published;
 import nablarch.core.validation.ee.ValidatorUtil;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.Handler;
@@ -21,6 +22,7 @@ import nablarch.fw.web.HttpRequest;
  *
  * @author Hisaaki Shioiri
  */
+@Published(tag = "architect")
 public class JaxRsBeanValidationHandler implements Handler<HttpRequest, Object> {
 
     @Override
