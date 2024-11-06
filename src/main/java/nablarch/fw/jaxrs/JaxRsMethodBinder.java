@@ -2,7 +2,9 @@ package nablarch.fw.jaxrs;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import jakarta.ws.rs.Path;
@@ -188,13 +190,21 @@ public class JaxRsMethodBinder implements MethodBinder<HttpRequest, Object> {
             Method method = null;
 
             Class<?> resourceClass = findJaxRsResourceClass(delegate.getClass());
+            Method[] methods;
 
-            if (resourceClass == null) {
+            if (resourceClass != null) {
+                // JAX-RSリソースクラスの場合は、そのクラスにのみ定義されたpublicメソッドを対象とする
+                methods =
+                        Arrays.stream(resourceClass.getDeclaredMethods())
+                                .filter(m -> Modifier.isPublic(m.getModifiers()))
+                                .toArray(Method[]::new);
+            } else {
                 // @Pathアノテーションが付与されたリソースクラスではない場合は、delegateに指定されたクラスをそのまま使用する
                 resourceClass = delegate.getClass();
+                methods = resourceClass.getMethods();
             }
 
-            for (Method m : resourceClass.getMethods()) {
+            for (Method m : methods) {
                 if (!m.getName().equals(methodName)) {
                     continue;
                 }
