@@ -228,10 +228,10 @@ public class JaxRsMethodBinder implements MethodBinder<HttpRequest, Object> {
             if (isJaxRsResourceClass(clazz)) {
                 return clazz;
             }
-
+            // 親クラスを優先して探索する
             Class<?> superClass = clazz.getSuperclass();
-            if (!superClass.equals(Object.class)) {
-                return findJaxRsResourceClass(superClass);
+            if (isJaxRsResourceClass(superClass)) {
+                return superClass;
             }
 
             // インタフェースを検索する
@@ -239,6 +239,10 @@ public class JaxRsMethodBinder implements MethodBinder<HttpRequest, Object> {
                 if (isJaxRsResourceClass(interfaceClass)) {
                     return interfaceClass;
                 }
+            }
+
+            if (!superClass.equals(Object.class)) {
+                return findJaxRsResourceClass(superClass);
             }
 
             return null;

@@ -120,6 +120,16 @@ public class JaxRsMethodBinderTest {
         assertThat("インターフェース定義を実装したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
 
         sut = new JaxRsMethodBinder("list", dummyHandlers);
+        wrapper = sut.bind(new ResourceExtendsAndImplements());
+        assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
+        assertThat("インターフェース定義を実装したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
+
+        sut = new JaxRsMethodBinder("list", dummyHandlers);
+        wrapper = sut.bind(new ResourceExtendsAndImplements2());
+        assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
+        assertThat("親クラスで実装したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
+
+        sut = new JaxRsMethodBinder("list", dummyHandlers);
         wrapper = sut.bind(new ResourceInheritDefaultMethod());
         assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
         assertThat("引き継いだデフォルトメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
@@ -457,6 +467,24 @@ public class JaxRsMethodBinderTest {
         HttpResponse list();
     }
 
+    public static abstract class ParentPlainClass {
+    }
+
+    public static abstract class ParentPlainExtendsClass extends ParentPlainClass {
+    }
+
+    @Path("/path2")
+    public static abstract class ParentResource {
+        @GET
+        @Path("/list2")
+        @Produces(MediaType.APPLICATION_JSON)
+        public HttpResponse list() {
+            HttpResponse response = new HttpResponse(200);
+            response.write("ok");
+            return response;
+        }
+    }
+
     public static class ResourceImpl implements ResourceInterface {
         @Override
         public HttpResponse list() {
@@ -464,6 +492,18 @@ public class JaxRsMethodBinderTest {
             response.write("ok");
             return response;
         }
+    }
+
+    public static class ResourceExtendsAndImplements extends ParentPlainExtendsClass implements ResourceInterface {
+        @Override
+        public HttpResponse list() {
+            HttpResponse response = new HttpResponse(200);
+            response.write("ok");
+            return response;
+        }
+    }
+
+    public static class ResourceExtendsAndImplements2 extends ParentResource implements ResourceInterface {
     }
 
     @Path("/path")
