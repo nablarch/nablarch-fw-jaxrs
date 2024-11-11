@@ -1,5 +1,9 @@
 package nablarch.fw.jaxrs;
 
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.Handler;
 import nablarch.fw.HandlerWrapper;
@@ -97,6 +101,43 @@ public class JaxRsMethodBinderTest {
         assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
         assertThat("指定したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(),
                 containsString("request and context and form"));
+    }
+
+    /**
+     * JAX-RSリソースクラスの継承、インターフェース実装に関する呼び分けを確認する
+     */
+    @Test
+    public void testBind_jaxRsInheritVariation_success() throws Exception {
+
+        sut = new JaxRsMethodBinder("list", dummyHandlers);
+        HandlerWrapper<HttpRequest, Object> wrapper = sut.bind(new SimpleResource());
+        assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
+        assertThat("指定したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
+
+        sut = new JaxRsMethodBinder("list", dummyHandlers);
+        wrapper = sut.bind(new ResourceImpl());
+        assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
+        assertThat("インターフェース定義を実装したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
+
+        sut = new JaxRsMethodBinder("list", dummyHandlers);
+        wrapper = sut.bind(new ResourceExtendsAndImplements());
+        assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
+        assertThat("インターフェース定義を実装したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
+
+        sut = new JaxRsMethodBinder("list", dummyHandlers);
+        wrapper = sut.bind(new ResourceExtendsAndImplements2());
+        assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
+        assertThat("親クラスで実装したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
+
+        sut = new JaxRsMethodBinder("list", dummyHandlers);
+        wrapper = sut.bind(new ResourceInheritDefaultMethod());
+        assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
+        assertThat("引き継いだデフォルトメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
+
+        sut = new JaxRsMethodBinder("list", dummyHandlers);
+        wrapper = sut.bind(new ResourceOverrideDefaultMethod());
+        assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
+        assertThat("オーバーライドしたメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("test"));
     }
 
     /**
@@ -402,6 +443,90 @@ public class JaxRsMethodBinderTest {
         @SuppressWarnings("SameReturnValue")
         private HttpResponse method() {
             return null;
+        }
+    }
+
+
+    @Path("/path")
+    public static class SimpleResource {
+        @GET
+        @Path("/list")
+        @Produces(MediaType.TEXT_PLAIN)
+        public HttpResponse list() {
+            HttpResponse response = new HttpResponse(200);
+            response.write("ok");
+            return response;
+        }
+    }
+
+    @Path("/path")
+    public interface ResourceInterface {
+        @GET
+        @Path("/list")
+        @Produces(MediaType.APPLICATION_JSON)
+        HttpResponse list();
+    }
+
+    public static abstract class ParentPlainClass {
+    }
+
+    public static abstract class ParentPlainExtendsClass extends ParentPlainClass {
+    }
+
+    @Path("/path2")
+    public static abstract class ParentResource {
+        @GET
+        @Path("/list2")
+        @Produces(MediaType.APPLICATION_JSON)
+        public HttpResponse list() {
+            HttpResponse response = new HttpResponse(200);
+            response.write("ok");
+            return response;
+        }
+    }
+
+    public static class ResourceImpl implements ResourceInterface {
+        @Override
+        public HttpResponse list() {
+            HttpResponse response = new HttpResponse(200);
+            response.write("ok");
+            return response;
+        }
+    }
+
+    public static class ResourceExtendsAndImplements extends ParentPlainExtendsClass implements ResourceInterface {
+        @Override
+        public HttpResponse list() {
+            HttpResponse response = new HttpResponse(200);
+            response.write("ok");
+            return response;
+        }
+    }
+
+    public static class ResourceExtendsAndImplements2 extends ParentResource implements ResourceInterface {
+    }
+
+    @Path("/path")
+    public interface ResourceDefaultMethodInterface {
+        @GET
+        @Path("/list")
+        @Produces(MediaType.APPLICATION_JSON)
+        default HttpResponse list() {
+            HttpResponse response = new HttpResponse(200);
+            response.write("ok");
+            return response;
+        }
+    }
+
+    public static class ResourceInheritDefaultMethod implements ResourceDefaultMethodInterface {
+    }
+
+    public static class ResourceOverrideDefaultMethod implements ResourceDefaultMethodInterface {
+        @Override
+        public HttpResponse list() {
+            HttpResponse response = new HttpResponse(200);
+            response.write("test");
+            return response;
         }
     }
 }

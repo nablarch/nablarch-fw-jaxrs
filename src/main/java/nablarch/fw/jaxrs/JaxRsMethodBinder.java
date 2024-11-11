@@ -2,9 +2,12 @@ package nablarch.fw.jaxrs;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import jakarta.ws.rs.Path;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.Handler;
 import nablarch.fw.HandlerWrapper;
@@ -185,18 +188,74 @@ public class JaxRsMethodBinder implements MethodBinder<HttpRequest, Object> {
         @Override
         protected Method getMethodBoundTo(final HttpRequest httpRequest, final ExecutionContext executionContext) {
             Method method = null;
-            for (Method m : delegate.getClass().getMethods()) {
+
+            Class<?> resourceClass = findJaxRsResourceClass(delegate.getClass());
+            Method[] methods;
+
+            if (resourceClass != null) {
+                // JAX-RSリソースクラスの場合は、そのクラスにのみ定義されたpublicメソッドを対象とする
+                methods =
+                        Arrays.stream(resourceClass.getDeclaredMethods())
+                                .filter(m -> Modifier.isPublic(m.getModifiers()))
+                                .toArray(Method[]::new);
+            } else {
+                // @Pathアノテーションが付与されたリソースクラスではない場合は、delegateに指定されたクラスをそのまま使用する
+                resourceClass = delegate.getClass();
+                methods = resourceClass.getMethods();
+            }
+
+            for (Method m : methods) {
                 if (!m.getName().equals(methodName)) {
                     continue;
                 }
                 if (method != null) {
                     throw new IllegalArgumentException(
-                            "method name is duplicated. class = [" + delegate.getClass().getName() + "],"
+                            "method name is duplicated. class = [" + resourceClass.getName() + "],"
                                     + " method = [" + methodName + ']');
                 }
                 method = m;
             }
             return method;
+        }
+
+        /**
+         * リソースクラスを引数に指定したクラス、親クラス、実装しているインターフェースの順で探索する
+         *
+         * @param clazz 確認対象のクラス
+         * @return 探索してリソースクラスが見つかった場合はその{@link Class}クラス、見つからなかった場合は{@code null}
+         */
+        private Class<?> findJaxRsResourceClass(Class<?> clazz) {
+            if (isJaxRsResourceClass(clazz)) {
+                return clazz;
+            }
+            // 親クラスを優先して探索する
+            Class<?> superClass = clazz.getSuperclass();
+            if (isJaxRsResourceClass(superClass)) {
+                return superClass;
+            }
+
+            // インタフェースを検索する
+            for (Class<?> interfaceClass : clazz.getInterfaces()) {
+                if (isJaxRsResourceClass(interfaceClass)) {
+                    return interfaceClass;
+                }
+            }
+
+            if (!superClass.equals(Object.class)) {
+                return findJaxRsResourceClass(superClass);
+            }
+
+            return null;
+        }
+
+        /**
+         * リソースクラスかどうかを判定する。
+         *
+         * @param clazz 判定対象のクラス
+         * @return JAX-RSのリソースクラスの場合は{@code true}
+         */
+        private boolean isJaxRsResourceClass(Class<?> clazz) {
+            return clazz.isAnnotationPresent(Path.class);
         }
 
         @Override
