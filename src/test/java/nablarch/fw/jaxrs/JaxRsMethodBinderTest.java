@@ -130,6 +130,11 @@ public class JaxRsMethodBinderTest {
         assertThat("親クラスで実装したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
 
         sut = new JaxRsMethodBinder("list", dummyHandlers);
+        wrapper = sut.bind(new ResourceExtendsGrandParentResourceAndIMplementsPlainInterface());
+        assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
+        assertThat("親クラスで実装したメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
+
+        sut = new JaxRsMethodBinder("list", dummyHandlers);
         wrapper = sut.bind(new ResourceInheritDefaultMethod());
         assertThat("戻り値の型がMethodBindingを継承していること", wrapper, instanceOf(MethodBinding.class));
         assertThat("引き継いだデフォルトメソッドが実行されていること", ((HttpResponse) wrapper.handle(req, ctx)).getBodyString(), containsString("ok"));
@@ -467,6 +472,9 @@ public class JaxRsMethodBinderTest {
         HttpResponse list();
     }
 
+    public interface PlainInterface {
+    }
+
     public static abstract class ParentPlainClass {
     }
 
@@ -483,6 +491,9 @@ public class JaxRsMethodBinderTest {
             response.write("ok");
             return response;
         }
+    }
+
+    public static abstract class ParentResourceExtendsClass extends ParentResource {
     }
 
     public static class ResourceImpl implements ResourceInterface {
@@ -504,6 +515,9 @@ public class JaxRsMethodBinderTest {
     }
 
     public static class ResourceExtendsAndImplements2 extends ParentResource implements ResourceInterface {
+    }
+
+    public static class ResourceExtendsGrandParentResourceAndIMplementsPlainInterface extends ParentResourceExtendsClass implements PlainInterface {
     }
 
     @Path("/path")
