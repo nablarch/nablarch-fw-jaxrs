@@ -57,7 +57,7 @@ public class BodyConvertHandler implements HttpRequestHandler {
             return new HttpResponse(Status.NO_CONTENT.getStatusCode());
         }
 
-        final EntityResponse entityResponse = response instanceof EntityResponse ? (EntityResponse) response : null;
+        final EntityResponse<?> entityResponse = response instanceof EntityResponse<?> ? (EntityResponse<?>) response : null;
         final Object entity = entityResponse != null ? entityResponse.getEntity() : response;
 
         String producesMediaType = jaxRsContext.getProducesMediaType();
@@ -93,7 +93,7 @@ public class BodyConvertHandler implements HttpRequestHandler {
      * @param from {@link EntityResponse}
      * @param to コンバートされた{@link HttpResponse}
      */
-    private void copy(EntityResponse from, HttpResponse to) {
+    private void copy(EntityResponse<?> from, HttpResponse to) {
 
         // response header
         final Map<String, String> toHeaderMap = to.getHeaderMap();

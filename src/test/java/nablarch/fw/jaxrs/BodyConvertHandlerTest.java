@@ -631,16 +631,16 @@ public class BodyConvertHandlerTest {
         }
 
         @Produces(MediaType.APPLICATION_XML)
-        public EntityResponse entityResponse(HttpRequest request) {
-            EntityResponse response = new EntityResponse();
+        public EntityResponse<TestForm> entityResponse(HttpRequest request) {
+            EntityResponse<TestForm> response = new EntityResponse<>();
             response.setEntity(new TestForm());
             response.setStatusCode(505);
             response.setHeader("test-name", "test-value");
             return response;
         }
 
-        public EntityResponse entityResponseWithContentType(HttpRequest request) {
-            EntityResponse response = new EntityResponse();
+        public EntityResponse<TestForm> entityResponseWithContentType(HttpRequest request) {
+            EntityResponse<TestForm> response = new EntityResponse<>();
             response.setEntity(new TestForm());
             response.setContentType(MediaType.APPLICATION_JSON);
             response.setStatusCode(505);
@@ -649,14 +649,15 @@ public class BodyConvertHandlerTest {
         }
 
         @Produces(MediaType.APPLICATION_XML)
-        public EntityResponse invalidContentType(HttpRequest request) {
-            EntityResponse response = new EntityResponse();
+        public EntityResponse<?> invalidContentType(HttpRequest request) {
+            EntityResponse<?> response = new EntityResponse<>();
             response.setContentType(MediaType.APPLICATION_JSON);
             return response;
         }
 
         @Produces(MediaType.APPLICATION_XML)
         public EntityResponse entityResponseNoneSpecified(HttpRequest request) {
+            // 以前はEntityResponseがジェネリクスに対応していなかったため、互確認のために残している
             EntityResponse response = new EntityResponse();
             response.setEntity(new TestForm());
             return response;
