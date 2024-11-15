@@ -23,16 +23,16 @@ public class MultipartFormDataBodyConverter implements BodyConverter {
     }
 
     /**
-     * マルチパートのメディアタイプがレスポンスとなることはないため、なにもしない
+     * マルチパートのメディアタイプがレスポンスとなることはないためサポートしない
      *
      * @param response Beanオブジェクト
      * @param executionContext 実行コンテキスト
-     * @return 常に{@code null}
+     * @return なし
+     * @throws 常に{@link UnsupportedOperationException}をスローする
      */
     @Override
     public HttpResponse write(Object response, ExecutionContext executionContext) {
-        // なにもしない
-        return null;
+        throw new UnsupportedOperationException("multipart/form-data is not supported in response.");
     }
 
     /**
@@ -43,6 +43,6 @@ public class MultipartFormDataBodyConverter implements BodyConverter {
      */
     @Override
     public boolean isConvertible(String mediaType) {
-        return mediaType.startsWith(MediaType.MULTIPART_FORM_DATA);
+        return mediaType.toLowerCase().startsWith("multipart/form-data");
     }
 }
