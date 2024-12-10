@@ -1,6 +1,5 @@
 package nablarch.fw.jaxrs;
 
-import jakarta.ws.rs.core.MediaType;
 import nablarch.fw.ExecutionContext;
 import nablarch.fw.web.HttpRequest;
 import nablarch.fw.web.HttpResponse;
