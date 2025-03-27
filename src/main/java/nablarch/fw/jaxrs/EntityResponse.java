@@ -5,16 +5,17 @@ import nablarch.fw.web.HttpResponse;
 
 /**
  * Entityを持つレスポンス。
- *
+ * <p>
  * {@link jakarta.ws.rs.Produces}を使用した場合に
  * レスポンスヘッダとステータスコードを指定したい場合に使用する。
  *
+ * @param <E> Entityの型
  * @author Kiyohito Itoh
  */
-public class EntityResponse extends HttpResponse {
+public class EntityResponse<E> extends HttpResponse {
 
     /** エンティティ */
-    private Object entity;
+    private E entity;
 
     /** ステータスコードが設定されたか否か */
     private boolean statusCodeSet = false;
@@ -24,7 +25,7 @@ public class EntityResponse extends HttpResponse {
      *
      * @return エンティティ
      */
-    public Object getEntity() {
+    public E getEntity() {
         return entity;
     }
 
@@ -34,7 +35,7 @@ public class EntityResponse extends HttpResponse {
      * @param entity エンティティ
      */
     @Published
-    public EntityResponse setEntity(Object entity) {
+    public EntityResponse<E> setEntity(E entity) {
         this.entity = entity;
         return this;
     }
