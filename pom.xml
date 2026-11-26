@@ -32,13 +32,6 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
-      <dependency>
-        <groupId>fish.payara.api</groupId>
-        <artifactId>payara-bom</artifactId>
-        <version>${payara-bom.version}</version>
-        <scope>import</scope>
-        <type>pom</type>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -140,13 +133,15 @@
     </dependency>
 
     <dependency>
-      <groupId>fish.payara.arquillian</groupId>
-      <artifactId>arquillian-payara-server-embedded</artifactId>
+      <groupId>org.omnifaces.arquillian</groupId>
+      <artifactId>arquillian-glassfish-server-embedded</artifactId>
+      <version>${arquillian-glassfish-embedded.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>fish.payara.extras</groupId>
-      <artifactId>payara-embedded-all</artifactId>
+      <groupId>org.glassfish.main.extras</groupId>
+      <artifactId>glassfish-embedded-all</artifactId>
+      <version>${glassfish-embedded.version}</version>
       <scope>provided</scope>
     </dependency>
 
